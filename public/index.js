@@ -1,4 +1,1615 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+module.exports = { "default": require("core-js/library/fn/object/define-property"), __esModule: true };
+},{"core-js/library/fn/object/define-property":7}],2:[function(require,module,exports){
+module.exports = { "default": require("core-js/library/fn/promise"), __esModule: true };
+},{"core-js/library/fn/promise":8}],3:[function(require,module,exports){
+"use strict";
+
+exports["default"] = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+exports.__esModule = true;
+},{}],4:[function(require,module,exports){
+"use strict";
+
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+exports["default"] = (function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+
+      _Object$defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+})();
+
+exports.__esModule = true;
+},{"babel-runtime/core-js/object/define-property":1}],5:[function(require,module,exports){
+"use strict";
+
+var _Object$defineProperty = require("babel-runtime/core-js/object/define-property")["default"];
+
+exports["default"] = function (obj, key, value) {
+  if (key in obj) {
+    _Object$defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+};
+
+exports.__esModule = true;
+},{"babel-runtime/core-js/object/define-property":1}],6:[function(require,module,exports){
+"use strict";
+
+exports["default"] = function (obj) {
+  return obj && obj.__esModule ? obj : {
+    "default": obj
+  };
+};
+
+exports.__esModule = true;
+},{}],7:[function(require,module,exports){
+var $ = require('../../modules/$');
+module.exports = function defineProperty(it, key, desc){
+  return $.setDesc(it, key, desc);
+};
+},{"../../modules/$":21}],8:[function(require,module,exports){
+require('../modules/es6.object.to-string');
+require('../modules/es6.string.iterator');
+require('../modules/web.dom.iterable');
+require('../modules/es6.promise');
+module.exports = require('../modules/$').core.Promise;
+},{"../modules/$":21,"../modules/es6.object.to-string":34,"../modules/es6.promise":35,"../modules/es6.string.iterator":36,"../modules/web.dom.iterable":37}],9:[function(require,module,exports){
+var $ = require('./$');
+function assert(condition, msg1, msg2){
+  if(!condition)throw TypeError(msg2 ? msg1 + msg2 : msg1);
+}
+assert.def = $.assertDefined;
+assert.fn = function(it){
+  if(!$.isFunction(it))throw TypeError(it + ' is not a function!');
+  return it;
+};
+assert.obj = function(it){
+  if(!$.isObject(it))throw TypeError(it + ' is not an object!');
+  return it;
+};
+assert.inst = function(it, Constructor, name){
+  if(!(it instanceof Constructor))throw TypeError(name + ": use the 'new' operator!");
+  return it;
+};
+module.exports = assert;
+},{"./$":21}],10:[function(require,module,exports){
+var $        = require('./$')
+  , TAG      = require('./$.wks')('toStringTag')
+  , toString = {}.toString;
+function cof(it){
+  return toString.call(it).slice(8, -1);
+}
+cof.classof = function(it){
+  var O, T;
+  return it == undefined ? it === undefined ? 'Undefined' : 'Null'
+    : typeof (T = (O = Object(it))[TAG]) == 'string' ? T : cof(O);
+};
+cof.set = function(it, tag, stat){
+  if(it && !$.has(it = stat ? it : it.prototype, TAG))$.hide(it, TAG, tag);
+};
+module.exports = cof;
+},{"./$":21,"./$.wks":32}],11:[function(require,module,exports){
+// Optional / simple context binding
+var assertFunction = require('./$.assert').fn;
+module.exports = function(fn, that, length){
+  assertFunction(fn);
+  if(~length && that === undefined)return fn;
+  switch(length){
+    case 1: return function(a){
+      return fn.call(that, a);
+    };
+    case 2: return function(a, b){
+      return fn.call(that, a, b);
+    };
+    case 3: return function(a, b, c){
+      return fn.call(that, a, b, c);
+    };
+  } return function(/* ...args */){
+      return fn.apply(that, arguments);
+    };
+};
+},{"./$.assert":9}],12:[function(require,module,exports){
+var $          = require('./$')
+  , global     = $.g
+  , core       = $.core
+  , isFunction = $.isFunction;
+function ctx(fn, that){
+  return function(){
+    return fn.apply(that, arguments);
+  };
+}
+// type bitmap
+$def.F = 1;  // forced
+$def.G = 2;  // global
+$def.S = 4;  // static
+$def.P = 8;  // proto
+$def.B = 16; // bind
+$def.W = 32; // wrap
+function $def(type, name, source){
+  var key, own, out, exp
+    , isGlobal = type & $def.G
+    , isProto  = type & $def.P
+    , target   = isGlobal ? global : type & $def.S
+        ? global[name] : (global[name] || {}).prototype
+    , exports  = isGlobal ? core : core[name] || (core[name] = {});
+  if(isGlobal)source = name;
+  for(key in source){
+    // contains in native
+    own = !(type & $def.F) && target && key in target;
+    if(own && key in exports)continue;
+    // export native or passed
+    out = own ? target[key] : source[key];
+    // prevent global pollution for namespaces
+    if(isGlobal && !isFunction(target[key]))exp = source[key];
+    // bind timers to global for call from export context
+    else if(type & $def.B && own)exp = ctx(out, global);
+    // wrap global constructors for prevent change them in library
+    else if(type & $def.W && target[key] == out)!function(C){
+      exp = function(param){
+        return this instanceof C ? new C(param) : C(param);
+      };
+      exp.prototype = C.prototype;
+    }(out);
+    else exp = isProto && isFunction(out) ? ctx(Function.call, out) : out;
+    // export
+    exports[key] = exp;
+    if(isProto)(exports.prototype || (exports.prototype = {}))[key] = out;
+  }
+}
+module.exports = $def;
+},{"./$":21}],13:[function(require,module,exports){
+var $        = require('./$')
+  , document = $.g.document
+  , isObject = $.isObject
+  // in old IE typeof document.createElement is 'object'
+  , is = isObject(document) && isObject(document.createElement);
+module.exports = function(it){
+  return is ? document.createElement(it) : {};
+};
+},{"./$":21}],14:[function(require,module,exports){
+var ctx  = require('./$.ctx')
+  , get  = require('./$.iter').get
+  , call = require('./$.iter-call');
+module.exports = function(iterable, entries, fn, that){
+  var iterator = get(iterable)
+    , f        = ctx(fn, that, entries ? 2 : 1)
+    , step;
+  while(!(step = iterator.next()).done){
+    if(call(iterator, f, step.value, entries) === false){
+      return call.close(iterator);
+    }
+  }
+};
+},{"./$.ctx":11,"./$.iter":20,"./$.iter-call":17}],15:[function(require,module,exports){
+module.exports = function($){
+  $.FW   = false;
+  $.path = $.core;
+  return $;
+};
+},{}],16:[function(require,module,exports){
+// Fast apply
+// http://jsperf.lnkit.com/fast-apply/5
+module.exports = function(fn, args, that){
+  var un = that === undefined;
+  switch(args.length){
+    case 0: return un ? fn()
+                      : fn.call(that);
+    case 1: return un ? fn(args[0])
+                      : fn.call(that, args[0]);
+    case 2: return un ? fn(args[0], args[1])
+                      : fn.call(that, args[0], args[1]);
+    case 3: return un ? fn(args[0], args[1], args[2])
+                      : fn.call(that, args[0], args[1], args[2]);
+    case 4: return un ? fn(args[0], args[1], args[2], args[3])
+                      : fn.call(that, args[0], args[1], args[2], args[3]);
+    case 5: return un ? fn(args[0], args[1], args[2], args[3], args[4])
+                      : fn.call(that, args[0], args[1], args[2], args[3], args[4]);
+  } return              fn.apply(that, args);
+};
+},{}],17:[function(require,module,exports){
+var assertObject = require('./$.assert').obj;
+function close(iterator){
+  var ret = iterator['return'];
+  if(ret !== undefined)assertObject(ret.call(iterator));
+}
+function call(iterator, fn, value, entries){
+  try {
+    return entries ? fn(assertObject(value)[0], value[1]) : fn(value);
+  } catch(e){
+    close(iterator);
+    throw e;
+  }
+}
+call.close = close;
+module.exports = call;
+},{"./$.assert":9}],18:[function(require,module,exports){
+var $def            = require('./$.def')
+  , $redef          = require('./$.redef')
+  , $               = require('./$')
+  , cof             = require('./$.cof')
+  , $iter           = require('./$.iter')
+  , SYMBOL_ITERATOR = require('./$.wks')('iterator')
+  , FF_ITERATOR     = '@@iterator'
+  , KEYS            = 'keys'
+  , VALUES          = 'values'
+  , Iterators       = $iter.Iterators;
+module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE){
+  $iter.create(Constructor, NAME, next);
+  function createMethod(kind){
+    function $$(that){
+      return new Constructor(that, kind);
+    }
+    switch(kind){
+      case KEYS: return function keys(){ return $$(this); };
+      case VALUES: return function values(){ return $$(this); };
+    } return function entries(){ return $$(this); };
+  }
+  var TAG      = NAME + ' Iterator'
+    , proto    = Base.prototype
+    , _native  = proto[SYMBOL_ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT]
+    , _default = _native || createMethod(DEFAULT)
+    , methods, key;
+  // Fix native
+  if(_native){
+    var IteratorPrototype = $.getProto(_default.call(new Base));
+    // Set @@toStringTag to native iterators
+    cof.set(IteratorPrototype, TAG, true);
+    // FF fix
+    if($.FW && $.has(proto, FF_ITERATOR))$iter.set(IteratorPrototype, $.that);
+  }
+  // Define iterator
+  if($.FW || FORCE)$iter.set(proto, _default);
+  // Plug for library
+  Iterators[NAME] = _default;
+  Iterators[TAG]  = $.that;
+  if(DEFAULT){
+    methods = {
+      keys:    IS_SET            ? _default : createMethod(KEYS),
+      values:  DEFAULT == VALUES ? _default : createMethod(VALUES),
+      entries: DEFAULT != VALUES ? _default : createMethod('entries')
+    };
+    if(FORCE)for(key in methods){
+      if(!(key in proto))$redef(proto, key, methods[key]);
+    } else $def($def.P + $def.F * $iter.BUGGY, NAME, methods);
+  }
+};
+},{"./$":21,"./$.cof":10,"./$.def":12,"./$.iter":20,"./$.redef":23,"./$.wks":32}],19:[function(require,module,exports){
+var SYMBOL_ITERATOR = require('./$.wks')('iterator')
+  , SAFE_CLOSING    = false;
+try {
+  var riter = [7][SYMBOL_ITERATOR]();
+  riter['return'] = function(){ SAFE_CLOSING = true; };
+  Array.from(riter, function(){ throw 2; });
+} catch(e){ /* empty */ }
+module.exports = function(exec){
+  if(!SAFE_CLOSING)return false;
+  var safe = false;
+  try {
+    var arr  = [7]
+      , iter = arr[SYMBOL_ITERATOR]();
+    iter.next = function(){ safe = true; };
+    arr[SYMBOL_ITERATOR] = function(){ return iter; };
+    exec(arr);
+  } catch(e){ /* empty */ }
+  return safe;
+};
+},{"./$.wks":32}],20:[function(require,module,exports){
+'use strict';
+var $                 = require('./$')
+  , cof               = require('./$.cof')
+  , classof           = cof.classof
+  , assert            = require('./$.assert')
+  , assertObject      = assert.obj
+  , SYMBOL_ITERATOR   = require('./$.wks')('iterator')
+  , FF_ITERATOR       = '@@iterator'
+  , Iterators         = require('./$.shared')('iterators')
+  , IteratorPrototype = {};
+// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
+setIterator(IteratorPrototype, $.that);
+function setIterator(O, value){
+  $.hide(O, SYMBOL_ITERATOR, value);
+  // Add iterator for FF iterator protocol
+  if(FF_ITERATOR in [])$.hide(O, FF_ITERATOR, value);
+}
+
+module.exports = {
+  // Safari has buggy iterators w/o `next`
+  BUGGY: 'keys' in [] && !('next' in [].keys()),
+  Iterators: Iterators,
+  step: function(done, value){
+    return {value: value, done: !!done};
+  },
+  is: function(it){
+    var O      = Object(it)
+      , Symbol = $.g.Symbol;
+    return (Symbol && Symbol.iterator || FF_ITERATOR) in O
+      || SYMBOL_ITERATOR in O
+      || $.has(Iterators, classof(O));
+  },
+  get: function(it){
+    var Symbol = $.g.Symbol
+      , getIter;
+    if(it != undefined){
+      getIter = it[Symbol && Symbol.iterator || FF_ITERATOR]
+        || it[SYMBOL_ITERATOR]
+        || Iterators[classof(it)];
+    }
+    assert($.isFunction(getIter), it, ' is not iterable!');
+    return assertObject(getIter.call(it));
+  },
+  set: setIterator,
+  create: function(Constructor, NAME, next, proto){
+    Constructor.prototype = $.create(proto || IteratorPrototype, {next: $.desc(1, next)});
+    cof.set(Constructor, NAME + ' Iterator');
+  }
+};
+},{"./$":21,"./$.assert":9,"./$.cof":10,"./$.shared":26,"./$.wks":32}],21:[function(require,module,exports){
+'use strict';
+var global = typeof self != 'undefined' ? self : Function('return this')()
+  , core   = {}
+  , defineProperty = Object.defineProperty
+  , hasOwnProperty = {}.hasOwnProperty
+  , ceil  = Math.ceil
+  , floor = Math.floor
+  , max   = Math.max
+  , min   = Math.min;
+// The engine works fine with descriptors? Thank's IE8 for his funny defineProperty.
+var DESC = !!function(){
+  try {
+    return defineProperty({}, 'a', {get: function(){ return 2; }}).a == 2;
+  } catch(e){ /* empty */ }
+}();
+var hide = createDefiner(1);
+// 7.1.4 ToInteger
+function toInteger(it){
+  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+}
+function desc(bitmap, value){
+  return {
+    enumerable  : !(bitmap & 1),
+    configurable: !(bitmap & 2),
+    writable    : !(bitmap & 4),
+    value       : value
+  };
+}
+function simpleSet(object, key, value){
+  object[key] = value;
+  return object;
+}
+function createDefiner(bitmap){
+  return DESC ? function(object, key, value){
+    return $.setDesc(object, key, desc(bitmap, value));
+  } : simpleSet;
+}
+
+function isObject(it){
+  return it !== null && (typeof it == 'object' || typeof it == 'function');
+}
+function isFunction(it){
+  return typeof it == 'function';
+}
+function assertDefined(it){
+  if(it == undefined)throw TypeError("Can't call method on  " + it);
+  return it;
+}
+
+var $ = module.exports = require('./$.fw')({
+  g: global,
+  core: core,
+  html: global.document && document.documentElement,
+  // http://jsperf.com/core-js-isobject
+  isObject:   isObject,
+  isFunction: isFunction,
+  that: function(){
+    return this;
+  },
+  // 7.1.4 ToInteger
+  toInteger: toInteger,
+  // 7.1.15 ToLength
+  toLength: function(it){
+    return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
+  },
+  toIndex: function(index, length){
+    index = toInteger(index);
+    return index < 0 ? max(index + length, 0) : min(index, length);
+  },
+  has: function(it, key){
+    return hasOwnProperty.call(it, key);
+  },
+  create:     Object.create,
+  getProto:   Object.getPrototypeOf,
+  DESC:       DESC,
+  desc:       desc,
+  getDesc:    Object.getOwnPropertyDescriptor,
+  setDesc:    defineProperty,
+  setDescs:   Object.defineProperties,
+  getKeys:    Object.keys,
+  getNames:   Object.getOwnPropertyNames,
+  getSymbols: Object.getOwnPropertySymbols,
+  assertDefined: assertDefined,
+  // Dummy, fix for not array-like ES3 string in es5 module
+  ES5Object: Object,
+  toObject: function(it){
+    return $.ES5Object(assertDefined(it));
+  },
+  hide: hide,
+  def: createDefiner(0),
+  set: global.Symbol ? simpleSet : hide,
+  each: [].forEach
+});
+/* eslint-disable no-undef */
+if(typeof __e != 'undefined')__e = core;
+if(typeof __g != 'undefined')__g = global;
+},{"./$.fw":15}],22:[function(require,module,exports){
+var $redef = require('./$.redef');
+module.exports = function(target, src){
+  for(var key in src)$redef(target, key, src[key]);
+  return target;
+};
+},{"./$.redef":23}],23:[function(require,module,exports){
+module.exports = require('./$').hide;
+},{"./$":21}],24:[function(require,module,exports){
+module.exports = Object.is || function is(x, y){
+  return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
+};
+},{}],25:[function(require,module,exports){
+// Works with __proto__ only. Old v8 can't work with null proto objects.
+/* eslint-disable no-proto */
+var $      = require('./$')
+  , assert = require('./$.assert');
+function check(O, proto){
+  assert.obj(O);
+  assert(proto === null || $.isObject(proto), proto, ": can't set as prototype!");
+}
+module.exports = {
+  set: Object.setPrototypeOf || ('__proto__' in {} // eslint-disable-line
+    ? function(buggy, set){
+        try {
+          set = require('./$.ctx')(Function.call, $.getDesc(Object.prototype, '__proto__').set, 2);
+          set({}, []);
+        } catch(e){ buggy = true; }
+        return function setPrototypeOf(O, proto){
+          check(O, proto);
+          if(buggy)O.__proto__ = proto;
+          else set(O, proto);
+          return O;
+        };
+      }()
+    : undefined),
+  check: check
+};
+},{"./$":21,"./$.assert":9,"./$.ctx":11}],26:[function(require,module,exports){
+var $      = require('./$')
+  , SHARED = '__core-js_shared__'
+  , store  = $.g[SHARED] || ($.g[SHARED] = {});
+module.exports = function(key){
+  return store[key] || (store[key] = {});
+};
+},{"./$":21}],27:[function(require,module,exports){
+var $       = require('./$')
+  , SPECIES = require('./$.wks')('species');
+module.exports = function(C){
+  if($.DESC && !(SPECIES in C))$.setDesc(C, SPECIES, {
+    configurable: true,
+    get: $.that
+  });
+};
+},{"./$":21,"./$.wks":32}],28:[function(require,module,exports){
+// true  -> String#at
+// false -> String#codePointAt
+var $ = require('./$');
+module.exports = function(TO_STRING){
+  return function(that, pos){
+    var s = String($.assertDefined(that))
+      , i = $.toInteger(pos)
+      , l = s.length
+      , a, b;
+    if(i < 0 || i >= l)return TO_STRING ? '' : undefined;
+    a = s.charCodeAt(i);
+    return a < 0xd800 || a > 0xdbff || i + 1 === l
+      || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+        ? TO_STRING ? s.charAt(i) : a
+        : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+  };
+};
+},{"./$":21}],29:[function(require,module,exports){
+'use strict';
+var $      = require('./$')
+  , ctx    = require('./$.ctx')
+  , cof    = require('./$.cof')
+  , invoke = require('./$.invoke')
+  , cel    = require('./$.dom-create')
+  , global             = $.g
+  , isFunction         = $.isFunction
+  , html               = $.html
+  , process            = global.process
+  , setTask            = global.setImmediate
+  , clearTask          = global.clearImmediate
+  , MessageChannel     = global.MessageChannel
+  , counter            = 0
+  , queue              = {}
+  , ONREADYSTATECHANGE = 'onreadystatechange'
+  , defer, channel, port;
+function run(){
+  var id = +this;
+  if($.has(queue, id)){
+    var fn = queue[id];
+    delete queue[id];
+    fn();
+  }
+}
+function listner(event){
+  run.call(event.data);
+}
+// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
+if(!isFunction(setTask) || !isFunction(clearTask)){
+  setTask = function(fn){
+    var args = [], i = 1;
+    while(arguments.length > i)args.push(arguments[i++]);
+    queue[++counter] = function(){
+      invoke(isFunction(fn) ? fn : Function(fn), args);
+    };
+    defer(counter);
+    return counter;
+  };
+  clearTask = function(id){
+    delete queue[id];
+  };
+  // Node.js 0.8-
+  if(cof(process) == 'process'){
+    defer = function(id){
+      process.nextTick(ctx(run, id, 1));
+    };
+  // Modern browsers, skip implementation for WebWorkers
+  // IE8 has postMessage, but it's sync & typeof its postMessage is object
+  } else if(global.addEventListener && isFunction(global.postMessage) && !global.importScripts){
+    defer = function(id){
+      global.postMessage(id, '*');
+    };
+    global.addEventListener('message', listner, false);
+  // WebWorkers
+  } else if(isFunction(MessageChannel)){
+    channel = new MessageChannel;
+    port    = channel.port2;
+    channel.port1.onmessage = listner;
+    defer = ctx(port.postMessage, port, 1);
+  // IE8-
+  } else if(ONREADYSTATECHANGE in cel('script')){
+    defer = function(id){
+      html.appendChild(cel('script'))[ONREADYSTATECHANGE] = function(){
+        html.removeChild(this);
+        run.call(id);
+      };
+    };
+  // Rest old browsers
+  } else {
+    defer = function(id){
+      setTimeout(ctx(run, id, 1), 0);
+    };
+  }
+}
+module.exports = {
+  set:   setTask,
+  clear: clearTask
+};
+},{"./$":21,"./$.cof":10,"./$.ctx":11,"./$.dom-create":13,"./$.invoke":16}],30:[function(require,module,exports){
+var sid = 0;
+function uid(key){
+  return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++sid + Math.random()).toString(36));
+}
+uid.safe = require('./$').g.Symbol || uid;
+module.exports = uid;
+},{"./$":21}],31:[function(require,module,exports){
+module.exports = function(){ /* empty */ };
+},{}],32:[function(require,module,exports){
+var global = require('./$').g
+  , store  = require('./$.shared')('wks');
+module.exports = function(name){
+  return store[name] || (store[name] =
+    global.Symbol && global.Symbol[name] || require('./$.uid').safe('Symbol.' + name));
+};
+},{"./$":21,"./$.shared":26,"./$.uid":30}],33:[function(require,module,exports){
+var $          = require('./$')
+  , setUnscope = require('./$.unscope')
+  , ITER       = require('./$.uid').safe('iter')
+  , $iter      = require('./$.iter')
+  , step       = $iter.step
+  , Iterators  = $iter.Iterators;
+
+// 22.1.3.4 Array.prototype.entries()
+// 22.1.3.13 Array.prototype.keys()
+// 22.1.3.29 Array.prototype.values()
+// 22.1.3.30 Array.prototype[@@iterator]()
+require('./$.iter-define')(Array, 'Array', function(iterated, kind){
+  $.set(this, ITER, {o: $.toObject(iterated), i: 0, k: kind});
+// 22.1.5.2.1 %ArrayIteratorPrototype%.next()
+}, function(){
+  var iter  = this[ITER]
+    , O     = iter.o
+    , kind  = iter.k
+    , index = iter.i++;
+  if(!O || index >= O.length){
+    iter.o = undefined;
+    return step(1);
+  }
+  if(kind == 'keys'  )return step(0, index);
+  if(kind == 'values')return step(0, O[index]);
+  return step(0, [index, O[index]]);
+}, 'values');
+
+// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
+Iterators.Arguments = Iterators.Array;
+
+setUnscope('keys');
+setUnscope('values');
+setUnscope('entries');
+},{"./$":21,"./$.iter":20,"./$.iter-define":18,"./$.uid":30,"./$.unscope":31}],34:[function(require,module,exports){
+'use strict';
+// 19.1.3.6 Object.prototype.toString()
+var cof = require('./$.cof')
+  , tmp = {};
+tmp[require('./$.wks')('toStringTag')] = 'z';
+if(require('./$').FW && cof(tmp) != 'z'){
+  require('./$.redef')(Object.prototype, 'toString', function toString(){
+    return '[object ' + cof.classof(this) + ']';
+  }, true);
+}
+},{"./$":21,"./$.cof":10,"./$.redef":23,"./$.wks":32}],35:[function(require,module,exports){
+'use strict';
+var $        = require('./$')
+  , ctx      = require('./$.ctx')
+  , cof      = require('./$.cof')
+  , $def     = require('./$.def')
+  , assert   = require('./$.assert')
+  , forOf    = require('./$.for-of')
+  , setProto = require('./$.set-proto').set
+  , same     = require('./$.same')
+  , species  = require('./$.species')
+  , SPECIES  = require('./$.wks')('species')
+  , RECORD   = require('./$.uid').safe('record')
+  , PROMISE  = 'Promise'
+  , global   = $.g
+  , process  = global.process
+  , isNode   = cof(process) == 'process'
+  , asap     = process && process.nextTick || require('./$.task').set
+  , P        = global[PROMISE]
+  , isFunction     = $.isFunction
+  , isObject       = $.isObject
+  , assertFunction = assert.fn
+  , assertObject   = assert.obj
+  , Wrapper;
+
+function testResolve(sub){
+  var test = new P(function(){});
+  if(sub)test.constructor = Object;
+  return P.resolve(test) === test;
+}
+
+var useNative = function(){
+  var works = false;
+  function P2(x){
+    var self = new P(x);
+    setProto(self, P2.prototype);
+    return self;
+  }
+  try {
+    works = isFunction(P) && isFunction(P.resolve) && testResolve();
+    setProto(P2, P);
+    P2.prototype = $.create(P.prototype, {constructor: {value: P2}});
+    // actual Firefox has broken subclass support, test that
+    if(!(P2.resolve(5).then(function(){}) instanceof P2)){
+      works = false;
+    }
+    // actual V8 bug, https://code.google.com/p/v8/issues/detail?id=4162
+    if(works && $.DESC){
+      var thenableThenGotten = false;
+      P.resolve($.setDesc({}, 'then', {
+        get: function(){ thenableThenGotten = true; }
+      }));
+      works = thenableThenGotten;
+    }
+  } catch(e){ works = false; }
+  return works;
+}();
+
+// helpers
+function isPromise(it){
+  return isObject(it) && (useNative ? cof.classof(it) == 'Promise' : RECORD in it);
+}
+function sameConstructor(a, b){
+  // library wrapper special case
+  if(!$.FW && a === P && b === Wrapper)return true;
+  return same(a, b);
+}
+function getConstructor(C){
+  var S = assertObject(C)[SPECIES];
+  return S != undefined ? S : C;
+}
+function isThenable(it){
+  var then;
+  if(isObject(it))then = it.then;
+  return isFunction(then) ? then : false;
+}
+function notify(record){
+  var chain = record.c;
+  // strange IE + webpack dev server bug - use .call(global)
+  if(chain.length)asap.call(global, function(){
+    var value = record.v
+      , ok    = record.s == 1
+      , i     = 0;
+    function run(react){
+      var cb = ok ? react.ok : react.fail
+        , ret, then;
+      try {
+        if(cb){
+          if(!ok)record.h = true;
+          ret = cb === true ? value : cb(value);
+          if(ret === react.P){
+            react.rej(TypeError('Promise-chain cycle'));
+          } else if(then = isThenable(ret)){
+            then.call(ret, react.res, react.rej);
+          } else react.res(ret);
+        } else react.rej(value);
+      } catch(err){
+        react.rej(err);
+      }
+    }
+    while(chain.length > i)run(chain[i++]); // variable length - can't use forEach
+    chain.length = 0;
+  });
+}
+function isUnhandled(promise){
+  var record = promise[RECORD]
+    , chain  = record.a || record.c
+    , i      = 0
+    , react;
+  if(record.h)return false;
+  while(chain.length > i){
+    react = chain[i++];
+    if(react.fail || !isUnhandled(react.P))return false;
+  } return true;
+}
+function $reject(value){
+  var record = this
+    , promise;
+  if(record.d)return;
+  record.d = true;
+  record = record.r || record; // unwrap
+  record.v = value;
+  record.s = 2;
+  record.a = record.c.slice();
+  setTimeout(function(){
+    // strange IE + webpack dev server bug - use .call(global)
+    asap.call(global, function(){
+      if(isUnhandled(promise = record.p)){
+        if(isNode){
+          process.emit('unhandledRejection', value, promise);
+        } else if(global.console && console.error){
+          console.error('Unhandled promise rejection', value);
+        }
+      }
+      record.a = undefined;
+    });
+  }, 1);
+  notify(record);
+}
+function $resolve(value){
+  var record = this
+    , then;
+  if(record.d)return;
+  record.d = true;
+  record = record.r || record; // unwrap
+  try {
+    if(then = isThenable(value)){
+      // strange IE + webpack dev server bug - use .call(global)
+      asap.call(global, function(){
+        var wrapper = {r: record, d: false}; // wrap
+        try {
+          then.call(value, ctx($resolve, wrapper, 1), ctx($reject, wrapper, 1));
+        } catch(e){
+          $reject.call(wrapper, e);
+        }
+      });
+    } else {
+      record.v = value;
+      record.s = 1;
+      notify(record);
+    }
+  } catch(e){
+    $reject.call({r: record, d: false}, e); // wrap
+  }
+}
+
+// constructor polyfill
+if(!useNative){
+  // 25.4.3.1 Promise(executor)
+  P = function Promise(executor){
+    assertFunction(executor);
+    var record = {
+      p: assert.inst(this, P, PROMISE),       // <- promise
+      c: [],                                  // <- awaiting reactions
+      a: undefined,                           // <- checked in isUnhandled reactions
+      s: 0,                                   // <- state
+      d: false,                               // <- done
+      v: undefined,                           // <- value
+      h: false                                // <- handled rejection
+    };
+    $.hide(this, RECORD, record);
+    try {
+      executor(ctx($resolve, record, 1), ctx($reject, record, 1));
+    } catch(err){
+      $reject.call(record, err);
+    }
+  };
+  require('./$.mix')(P.prototype, {
+    // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
+    then: function then(onFulfilled, onRejected){
+      var S = assertObject(assertObject(this).constructor)[SPECIES];
+      var react = {
+        ok:   isFunction(onFulfilled) ? onFulfilled : true,
+        fail: isFunction(onRejected)  ? onRejected  : false
+      };
+      var promise = react.P = new (S != undefined ? S : P)(function(res, rej){
+        react.res = assertFunction(res);
+        react.rej = assertFunction(rej);
+      });
+      var record = this[RECORD];
+      record.c.push(react);
+      if(record.a)record.a.push(react);
+      if(record.s)notify(record);
+      return promise;
+    },
+    // 25.4.5.1 Promise.prototype.catch(onRejected)
+    'catch': function(onRejected){
+      return this.then(undefined, onRejected);
+    }
+  });
+}
+
+// export
+$def($def.G + $def.W + $def.F * !useNative, {Promise: P});
+cof.set(P, PROMISE);
+species(P);
+species(Wrapper = $.core[PROMISE]);
+
+// statics
+$def($def.S + $def.F * !useNative, PROMISE, {
+  // 25.4.4.5 Promise.reject(r)
+  reject: function reject(r){
+    return new (getConstructor(this))(function(res, rej){ rej(r); });
+  }
+});
+$def($def.S + $def.F * (!useNative || testResolve(true)), PROMISE, {
+  // 25.4.4.6 Promise.resolve(x)
+  resolve: function resolve(x){
+    return isPromise(x) && sameConstructor(x.constructor, this)
+      ? x : new this(function(res){ res(x); });
+  }
+});
+$def($def.S + $def.F * !(useNative && require('./$.iter-detect')(function(iter){
+  P.all(iter)['catch'](function(){});
+})), PROMISE, {
+  // 25.4.4.1 Promise.all(iterable)
+  all: function all(iterable){
+    var C      = getConstructor(this)
+      , values = [];
+    return new C(function(res, rej){
+      forOf(iterable, false, values.push, values);
+      var remaining = values.length
+        , results   = Array(remaining);
+      if(remaining)$.each.call(values, function(promise, index){
+        C.resolve(promise).then(function(value){
+          results[index] = value;
+          --remaining || res(results);
+        }, rej);
+      });
+      else res(results);
+    });
+  },
+  // 25.4.4.4 Promise.race(iterable)
+  race: function race(iterable){
+    var C = getConstructor(this);
+    return new C(function(res, rej){
+      forOf(iterable, false, function(promise){
+        C.resolve(promise).then(res, rej);
+      });
+    });
+  }
+});
+},{"./$":21,"./$.assert":9,"./$.cof":10,"./$.ctx":11,"./$.def":12,"./$.for-of":14,"./$.iter-detect":19,"./$.mix":22,"./$.same":24,"./$.set-proto":25,"./$.species":27,"./$.task":29,"./$.uid":30,"./$.wks":32}],36:[function(require,module,exports){
+var set   = require('./$').set
+  , $at   = require('./$.string-at')(true)
+  , ITER  = require('./$.uid').safe('iter')
+  , $iter = require('./$.iter')
+  , step  = $iter.step;
+
+// 21.1.3.27 String.prototype[@@iterator]()
+require('./$.iter-define')(String, 'String', function(iterated){
+  set(this, ITER, {o: String(iterated), i: 0});
+// 21.1.5.2.1 %StringIteratorPrototype%.next()
+}, function(){
+  var iter  = this[ITER]
+    , O     = iter.o
+    , index = iter.i
+    , point;
+  if(index >= O.length)return step(1);
+  point = $at(O, index);
+  iter.i += point.length;
+  return step(0, point);
+});
+},{"./$":21,"./$.iter":20,"./$.iter-define":18,"./$.string-at":28,"./$.uid":30}],37:[function(require,module,exports){
+require('./es6.array.iterator');
+var $           = require('./$')
+  , Iterators   = require('./$.iter').Iterators
+  , ITERATOR    = require('./$.wks')('iterator')
+  , ArrayValues = Iterators.Array
+  , NL          = $.g.NodeList
+  , HTC         = $.g.HTMLCollection
+  , NLProto     = NL && NL.prototype
+  , HTCProto    = HTC && HTC.prototype;
+if($.FW){
+  if(NL && !(ITERATOR in NLProto))$.hide(NLProto, ITERATOR, ArrayValues);
+  if(HTC && !(ITERATOR in HTCProto))$.hide(HTCProto, ITERATOR, ArrayValues);
+}
+Iterators.NodeList = Iterators.HTMLCollection = ArrayValues;
+},{"./$":21,"./$.iter":20,"./$.wks":32,"./es6.array.iterator":33}],38:[function(require,module,exports){
+
+},{}],39:[function(require,module,exports){
+module.exports = {
+  "100": "Continue",
+  "101": "Switching Protocols",
+  "102": "Processing",
+  "200": "OK",
+  "201": "Created",
+  "202": "Accepted",
+  "203": "Non-Authoritative Information",
+  "204": "No Content",
+  "205": "Reset Content",
+  "206": "Partial Content",
+  "207": "Multi-Status",
+  "208": "Already Reported",
+  "226": "IM Used",
+  "300": "Multiple Choices",
+  "301": "Moved Permanently",
+  "302": "Found",
+  "303": "See Other",
+  "304": "Not Modified",
+  "305": "Use Proxy",
+  "307": "Temporary Redirect",
+  "308": "Permanent Redirect",
+  "400": "Bad Request",
+  "401": "Unauthorized",
+  "402": "Payment Required",
+  "403": "Forbidden",
+  "404": "Not Found",
+  "405": "Method Not Allowed",
+  "406": "Not Acceptable",
+  "407": "Proxy Authentication Required",
+  "408": "Request Timeout",
+  "409": "Conflict",
+  "410": "Gone",
+  "411": "Length Required",
+  "412": "Precondition Failed",
+  "413": "Payload Too Large",
+  "414": "URI Too Long",
+  "415": "Unsupported Media Type",
+  "416": "Range Not Satisfiable",
+  "417": "Expectation Failed",
+  "418": "I'm a teapot",
+  "421": "Misdirected Request",
+  "422": "Unprocessable Entity",
+  "423": "Locked",
+  "424": "Failed Dependency",
+  "425": "Unordered Collection",
+  "426": "Upgrade Required",
+  "428": "Precondition Required",
+  "429": "Too Many Requests",
+  "431": "Request Header Fields Too Large",
+  "500": "Internal Server Error",
+  "501": "Not Implemented",
+  "502": "Bad Gateway",
+  "503": "Service Unavailable",
+  "504": "Gateway Timeout",
+  "505": "HTTP Version Not Supported",
+  "506": "Variant Also Negotiates",
+  "507": "Insufficient Storage",
+  "508": "Loop Detected",
+  "509": "Bandwidth Limit Exceeded",
+  "510": "Not Extended",
+  "511": "Network Authentication Required"
+}
+
+},{}],40:[function(require,module,exports){
+'use strict';
+module.exports = function () {
+	var str = [].map.call(arguments, function (str) {
+		return str.trim();
+	}).filter(function (str) {
+		return str.length;
+	}).join('-');
+
+	if (!str.length) {
+		return '';
+	}
+
+	if (str.length === 1 || !(/[_.\- ]+/).test(str) ) {
+		if (str[0] === str[0].toLowerCase() && str.slice(1) !== str.slice(1).toLowerCase()) {
+			return str;
+		}
+
+		return str.toLowerCase();
+	}
+
+	return str
+	.replace(/^[_.\- ]+/, '')
+	.toLowerCase()
+	.replace(/[_.\- ]+(\w|$)/g, function (m, p1) {
+		return p1.toUpperCase();
+	});
+};
+
+},{}],41:[function(require,module,exports){
+
+/**
+ * Expose `Emitter`.
+ */
+
+module.exports = Emitter;
+
+/**
+ * Initialize a new `Emitter`.
+ *
+ * @api public
+ */
+
+function Emitter(obj) {
+  if (obj) return mixin(obj);
+};
+
+/**
+ * Mixin the emitter properties.
+ *
+ * @param {Object} obj
+ * @return {Object}
+ * @api private
+ */
+
+function mixin(obj) {
+  for (var key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key];
+  }
+  return obj;
+}
+
+/**
+ * Listen on the given `event` with `fn`.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.on =
+Emitter.prototype.addEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+  (this._callbacks[event] = this._callbacks[event] || [])
+    .push(fn);
+  return this;
+};
+
+/**
+ * Adds an `event` listener that will be invoked a single
+ * time then automatically removed.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.once = function(event, fn){
+  var self = this;
+  this._callbacks = this._callbacks || {};
+
+  function on() {
+    self.off(event, on);
+    fn.apply(this, arguments);
+  }
+
+  on.fn = fn;
+  this.on(event, on);
+  return this;
+};
+
+/**
+ * Remove the given callback for `event` or all
+ * registered callbacks.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.off =
+Emitter.prototype.removeListener =
+Emitter.prototype.removeAllListeners =
+Emitter.prototype.removeEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+
+  // all
+  if (0 == arguments.length) {
+    this._callbacks = {};
+    return this;
+  }
+
+  // specific event
+  var callbacks = this._callbacks[event];
+  if (!callbacks) return this;
+
+  // remove all handlers
+  if (1 == arguments.length) {
+    delete this._callbacks[event];
+    return this;
+  }
+
+  // remove specific handler
+  var cb;
+  for (var i = 0; i < callbacks.length; i++) {
+    cb = callbacks[i];
+    if (cb === fn || cb.fn === fn) {
+      callbacks.splice(i, 1);
+      break;
+    }
+  }
+  return this;
+};
+
+/**
+ * Emit `event` with the given args.
+ *
+ * @param {String} event
+ * @param {Mixed} ...
+ * @return {Emitter}
+ */
+
+Emitter.prototype.emit = function(event){
+  this._callbacks = this._callbacks || {};
+  var args = [].slice.call(arguments, 1)
+    , callbacks = this._callbacks[event];
+
+  if (callbacks) {
+    callbacks = callbacks.slice(0);
+    for (var i = 0, len = callbacks.length; i < len; ++i) {
+      callbacks[i].apply(this, args);
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Return array of callbacks for `event`.
+ *
+ * @param {String} event
+ * @return {Array}
+ * @api public
+ */
+
+Emitter.prototype.listeners = function(event){
+  this._callbacks = this._callbacks || {};
+  return this._callbacks[event] || [];
+};
+
+/**
+ * Check if this emitter has `event` handlers.
+ *
+ * @param {String} event
+ * @return {Boolean}
+ * @api public
+ */
+
+Emitter.prototype.hasListeners = function(event){
+  return !! this.listeners(event).length;
+};
+
+},{}],42:[function(require,module,exports){
+
+/**
+ * This is the web browser implementation of `debug()`.
+ *
+ * Expose `debug()` as the module.
+ */
+
+exports = module.exports = require('./debug');
+exports.log = log;
+exports.formatArgs = formatArgs;
+exports.save = save;
+exports.load = load;
+exports.useColors = useColors;
+exports.storage = 'undefined' != typeof chrome
+               && 'undefined' != typeof chrome.storage
+                  ? chrome.storage.local
+                  : localstorage();
+
+/**
+ * Colors.
+ */
+
+exports.colors = [
+  'lightseagreen',
+  'forestgreen',
+  'goldenrod',
+  'dodgerblue',
+  'darkorchid',
+  'crimson'
+];
+
+/**
+ * Currently only WebKit-based Web Inspectors, Firefox >= v31,
+ * and the Firebug extension (any Firefox version) are known
+ * to support "%c" CSS customizations.
+ *
+ * TODO: add a `localStorage` variable to explicitly enable/disable colors
+ */
+
+function useColors() {
+  // is webkit? http://stackoverflow.com/a/16459606/376773
+  return ('WebkitAppearance' in document.documentElement.style) ||
+    // is firebug? http://stackoverflow.com/a/398120/376773
+    (window.console && (console.firebug || (console.exception && console.table))) ||
+    // is firefox >= v31?
+    // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
+    (navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31);
+}
+
+/**
+ * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
+ */
+
+exports.formatters.j = function(v) {
+  return JSON.stringify(v);
+};
+
+
+/**
+ * Colorize log arguments if enabled.
+ *
+ * @api public
+ */
+
+function formatArgs() {
+  var args = arguments;
+  var useColors = this.useColors;
+
+  args[0] = (useColors ? '%c' : '')
+    + this.namespace
+    + (useColors ? ' %c' : ' ')
+    + args[0]
+    + (useColors ? '%c ' : ' ')
+    + '+' + exports.humanize(this.diff);
+
+  if (!useColors) return args;
+
+  var c = 'color: ' + this.color;
+  args = [args[0], c, 'color: inherit'].concat(Array.prototype.slice.call(args, 1));
+
+  // the final "%c" is somewhat tricky, because there could be other
+  // arguments passed either before or after the %c, so we need to
+  // figure out the correct index to insert the CSS into
+  var index = 0;
+  var lastC = 0;
+  args[0].replace(/%[a-z%]/g, function(match) {
+    if ('%%' === match) return;
+    index++;
+    if ('%c' === match) {
+      // we only are interested in the *last* %c
+      // (the user may have provided their own)
+      lastC = index;
+    }
+  });
+
+  args.splice(lastC, 0, c);
+  return args;
+}
+
+/**
+ * Invokes `console.log()` when available.
+ * No-op when `console.log` is not a "function".
+ *
+ * @api public
+ */
+
+function log() {
+  // this hackery is required for IE8/9, where
+  // the `console.log` function doesn't have 'apply'
+  return 'object' === typeof console
+    && console.log
+    && Function.prototype.apply.call(console.log, console, arguments);
+}
+
+/**
+ * Save `namespaces`.
+ *
+ * @param {String} namespaces
+ * @api private
+ */
+
+function save(namespaces) {
+  try {
+    if (null == namespaces) {
+      exports.storage.removeItem('debug');
+    } else {
+      exports.storage.debug = namespaces;
+    }
+  } catch(e) {}
+}
+
+/**
+ * Load `namespaces`.
+ *
+ * @return {String} returns the previously persisted debug modes
+ * @api private
+ */
+
+function load() {
+  var r;
+  try {
+    r = exports.storage.debug;
+  } catch(e) {}
+  return r;
+}
+
+/**
+ * Enable namespaces listed in `localStorage.debug` initially.
+ */
+
+exports.enable(load());
+
+/**
+ * Localstorage attempts to return the localstorage.
+ *
+ * This is necessary because safari throws
+ * when a user disables cookies/localstorage
+ * and you attempt to access it.
+ *
+ * @return {LocalStorage}
+ * @api private
+ */
+
+function localstorage(){
+  try {
+    return window.localStorage;
+  } catch (e) {}
+}
+
+},{"./debug":43}],43:[function(require,module,exports){
+
+/**
+ * This is the common logic for both the Node.js and web browser
+ * implementations of `debug()`.
+ *
+ * Expose `debug()` as the module.
+ */
+
+exports = module.exports = debug;
+exports.coerce = coerce;
+exports.disable = disable;
+exports.enable = enable;
+exports.enabled = enabled;
+exports.humanize = require('ms');
+
+/**
+ * The currently active debug mode names, and names to skip.
+ */
+
+exports.names = [];
+exports.skips = [];
+
+/**
+ * Map of special "%n" handling functions, for the debug "format" argument.
+ *
+ * Valid key names are a single, lowercased letter, i.e. "n".
+ */
+
+exports.formatters = {};
+
+/**
+ * Previously assigned color.
+ */
+
+var prevColor = 0;
+
+/**
+ * Previous log timestamp.
+ */
+
+var prevTime;
+
+/**
+ * Select a color.
+ *
+ * @return {Number}
+ * @api private
+ */
+
+function selectColor() {
+  return exports.colors[prevColor++ % exports.colors.length];
+}
+
+/**
+ * Create a debugger with the given `namespace`.
+ *
+ * @param {String} namespace
+ * @return {Function}
+ * @api public
+ */
+
+function debug(namespace) {
+
+  // define the `disabled` version
+  function disabled() {
+  }
+  disabled.enabled = false;
+
+  // define the `enabled` version
+  function enabled() {
+
+    var self = enabled;
+
+    // set `diff` timestamp
+    var curr = +new Date();
+    var ms = curr - (prevTime || curr);
+    self.diff = ms;
+    self.prev = prevTime;
+    self.curr = curr;
+    prevTime = curr;
+
+    // add the `color` if not set
+    if (null == self.useColors) self.useColors = exports.useColors();
+    if (null == self.color && self.useColors) self.color = selectColor();
+
+    var args = Array.prototype.slice.call(arguments);
+
+    args[0] = exports.coerce(args[0]);
+
+    if ('string' !== typeof args[0]) {
+      // anything else let's inspect with %o
+      args = ['%o'].concat(args);
+    }
+
+    // apply any `formatters` transformations
+    var index = 0;
+    args[0] = args[0].replace(/%([a-z%])/g, function(match, format) {
+      // if we encounter an escaped % then don't increase the array index
+      if (match === '%%') return match;
+      index++;
+      var formatter = exports.formatters[format];
+      if ('function' === typeof formatter) {
+        var val = args[index];
+        match = formatter.call(self, val);
+
+        // now we need to remove `args[index]` since it's inlined in the `format`
+        args.splice(index, 1);
+        index--;
+      }
+      return match;
+    });
+
+    if ('function' === typeof exports.formatArgs) {
+      args = exports.formatArgs.apply(self, args);
+    }
+    var logFn = enabled.log || exports.log || console.log.bind(console);
+    logFn.apply(self, args);
+  }
+  enabled.enabled = true;
+
+  var fn = exports.enabled(namespace) ? enabled : disabled;
+
+  fn.namespace = namespace;
+
+  return fn;
+}
+
+/**
+ * Enables a debug mode by namespaces. This can include modes
+ * separated by a colon and wildcards.
+ *
+ * @param {String} namespaces
+ * @api public
+ */
+
+function enable(namespaces) {
+  exports.save(namespaces);
+
+  var split = (namespaces || '').split(/[\s,]+/);
+  var len = split.length;
+
+  for (var i = 0; i < len; i++) {
+    if (!split[i]) continue; // ignore empty strings
+    namespaces = split[i].replace(/\*/g, '.*?');
+    if (namespaces[0] === '-') {
+      exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+    } else {
+      exports.names.push(new RegExp('^' + namespaces + '$'));
+    }
+  }
+}
+
+/**
+ * Disable debug output.
+ *
+ * @api public
+ */
+
+function disable() {
+  exports.enable('');
+}
+
+/**
+ * Returns true if the given mode name is enabled, false otherwise.
+ *
+ * @param {String} name
+ * @return {Boolean}
+ * @api public
+ */
+
+function enabled(name) {
+  var i, len;
+  for (i = 0, len = exports.skips.length; i < len; i++) {
+    if (exports.skips[i].test(name)) {
+      return false;
+    }
+  }
+  for (i = 0, len = exports.names.length; i < len; i++) {
+    if (exports.names[i].test(name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Coerce `val`.
+ *
+ * @param {Mixed} val
+ * @return {Mixed}
+ * @api private
+ */
+
+function coerce(val) {
+  if (val instanceof Error) return val.stack || val.message;
+  return val;
+}
+
+},{"ms":45}],44:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.2.2
  * http://jquery.com/
@@ -9842,7 +11453,6226 @@ if ( !noGlobal ) {
 return jQuery;
 }));
 
-},{}],2:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
+/**
+ * Helpers.
+ */
+
+var s = 1000;
+var m = s * 60;
+var h = m * 60;
+var d = h * 24;
+var y = d * 365.25;
+
+/**
+ * Parse or format the given `val`.
+ *
+ * Options:
+ *
+ *  - `long` verbose formatting [false]
+ *
+ * @param {String|Number} val
+ * @param {Object} options
+ * @return {String|Number}
+ * @api public
+ */
+
+module.exports = function(val, options){
+  options = options || {};
+  if ('string' == typeof val) return parse(val);
+  return options.long
+    ? long(val)
+    : short(val);
+};
+
+/**
+ * Parse the given `str` and return milliseconds.
+ *
+ * @param {String} str
+ * @return {Number}
+ * @api private
+ */
+
+function parse(str) {
+  str = '' + str;
+  if (str.length > 10000) return;
+  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str);
+  if (!match) return;
+  var n = parseFloat(match[1]);
+  var type = (match[2] || 'ms').toLowerCase();
+  switch (type) {
+    case 'years':
+    case 'year':
+    case 'yrs':
+    case 'yr':
+    case 'y':
+      return n * y;
+    case 'days':
+    case 'day':
+    case 'd':
+      return n * d;
+    case 'hours':
+    case 'hour':
+    case 'hrs':
+    case 'hr':
+    case 'h':
+      return n * h;
+    case 'minutes':
+    case 'minute':
+    case 'mins':
+    case 'min':
+    case 'm':
+      return n * m;
+    case 'seconds':
+    case 'second':
+    case 'secs':
+    case 'sec':
+    case 's':
+      return n * s;
+    case 'milliseconds':
+    case 'millisecond':
+    case 'msecs':
+    case 'msec':
+    case 'ms':
+      return n;
+  }
+}
+
+/**
+ * Short format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function short(ms) {
+  if (ms >= d) return Math.round(ms / d) + 'd';
+  if (ms >= h) return Math.round(ms / h) + 'h';
+  if (ms >= m) return Math.round(ms / m) + 'm';
+  if (ms >= s) return Math.round(ms / s) + 's';
+  return ms + 'ms';
+}
+
+/**
+ * Long format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function long(ms) {
+  return plural(ms, d, 'day')
+    || plural(ms, h, 'hour')
+    || plural(ms, m, 'minute')
+    || plural(ms, s, 'second')
+    || ms + ' ms';
+}
+
+/**
+ * Pluralization helper.
+ */
+
+function plural(ms, n, name) {
+  if (ms < n) return;
+  if (ms < n * 1.5) return Math.floor(ms / n) + ' ' + name;
+  return Math.ceil(ms / n) + ' ' + name + 's';
+}
+
+},{}],46:[function(require,module,exports){
+// Load modules
+
+var Stringify = require('./stringify');
+var Parse = require('./parse');
+
+
+// Declare internals
+
+var internals = {};
+
+
+module.exports = {
+    stringify: Stringify,
+    parse: Parse
+};
+
+},{"./parse":47,"./stringify":48}],47:[function(require,module,exports){
+// Load modules
+
+var Utils = require('./utils');
+
+
+// Declare internals
+
+var internals = {
+    delimiter: '&',
+    depth: 5,
+    arrayLimit: 20,
+    parameterLimit: 1000,
+    strictNullHandling: false,
+    plainObjects: false,
+    allowPrototypes: false
+};
+
+
+internals.parseValues = function (str, options) {
+
+    var obj = {};
+    var parts = str.split(options.delimiter, options.parameterLimit === Infinity ? undefined : options.parameterLimit);
+
+    for (var i = 0, il = parts.length; i < il; ++i) {
+        var part = parts[i];
+        var pos = part.indexOf(']=') === -1 ? part.indexOf('=') : part.indexOf(']=') + 1;
+
+        if (pos === -1) {
+            obj[Utils.decode(part)] = '';
+
+            if (options.strictNullHandling) {
+                obj[Utils.decode(part)] = null;
+            }
+        }
+        else {
+            var key = Utils.decode(part.slice(0, pos));
+            var val = Utils.decode(part.slice(pos + 1));
+
+            if (!Object.prototype.hasOwnProperty.call(obj, key)) {
+                obj[key] = val;
+            }
+            else {
+                obj[key] = [].concat(obj[key]).concat(val);
+            }
+        }
+    }
+
+    return obj;
+};
+
+
+internals.parseObject = function (chain, val, options) {
+
+    if (!chain.length) {
+        return val;
+    }
+
+    var root = chain.shift();
+
+    var obj;
+    if (root === '[]') {
+        obj = [];
+        obj = obj.concat(internals.parseObject(chain, val, options));
+    }
+    else {
+        obj = options.plainObjects ? Object.create(null) : {};
+        var cleanRoot = root[0] === '[' && root[root.length - 1] === ']' ? root.slice(1, root.length - 1) : root;
+        var index = parseInt(cleanRoot, 10);
+        var indexString = '' + index;
+        if (!isNaN(index) &&
+            root !== cleanRoot &&
+            indexString === cleanRoot &&
+            index >= 0 &&
+            (options.parseArrays &&
+             index <= options.arrayLimit)) {
+
+            obj = [];
+            obj[index] = internals.parseObject(chain, val, options);
+        }
+        else {
+            obj[cleanRoot] = internals.parseObject(chain, val, options);
+        }
+    }
+
+    return obj;
+};
+
+
+internals.parseKeys = function (key, val, options) {
+
+    if (!key) {
+        return;
+    }
+
+    // Transform dot notation to bracket notation
+
+    if (options.allowDots) {
+        key = key.replace(/\.([^\.\[]+)/g, '[$1]');
+    }
+
+    // The regex chunks
+
+    var parent = /^([^\[\]]*)/;
+    var child = /(\[[^\[\]]*\])/g;
+
+    // Get the parent
+
+    var segment = parent.exec(key);
+
+    // Stash the parent if it exists
+
+    var keys = [];
+    if (segment[1]) {
+        // If we aren't using plain objects, optionally prefix keys
+        // that would overwrite object prototype properties
+        if (!options.plainObjects &&
+            Object.prototype.hasOwnProperty(segment[1])) {
+
+            if (!options.allowPrototypes) {
+                return;
+            }
+        }
+
+        keys.push(segment[1]);
+    }
+
+    // Loop through children appending to the array until we hit depth
+
+    var i = 0;
+    while ((segment = child.exec(key)) !== null && i < options.depth) {
+
+        ++i;
+        if (!options.plainObjects &&
+            Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ''))) {
+
+            if (!options.allowPrototypes) {
+                continue;
+            }
+        }
+        keys.push(segment[1]);
+    }
+
+    // If there's a remainder, just add whatever is left
+
+    if (segment) {
+        keys.push('[' + key.slice(segment.index) + ']');
+    }
+
+    return internals.parseObject(keys, val, options);
+};
+
+
+module.exports = function (str, options) {
+
+    options = options || {};
+    options.delimiter = typeof options.delimiter === 'string' || Utils.isRegExp(options.delimiter) ? options.delimiter : internals.delimiter;
+    options.depth = typeof options.depth === 'number' ? options.depth : internals.depth;
+    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : internals.arrayLimit;
+    options.parseArrays = options.parseArrays !== false;
+    options.allowDots = options.allowDots !== false;
+    options.plainObjects = typeof options.plainObjects === 'boolean' ? options.plainObjects : internals.plainObjects;
+    options.allowPrototypes = typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : internals.allowPrototypes;
+    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : internals.parameterLimit;
+    options.strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : internals.strictNullHandling;
+
+    if (str === '' ||
+        str === null ||
+        typeof str === 'undefined') {
+
+        return options.plainObjects ? Object.create(null) : {};
+    }
+
+    var tempObj = typeof str === 'string' ? internals.parseValues(str, options) : str;
+    var obj = options.plainObjects ? Object.create(null) : {};
+
+    // Iterate over the keys and setup the new object
+
+    var keys = Object.keys(tempObj);
+    for (var i = 0, il = keys.length; i < il; ++i) {
+        var key = keys[i];
+        var newObj = internals.parseKeys(key, tempObj[key], options);
+        obj = Utils.merge(obj, newObj, options);
+    }
+
+    return Utils.compact(obj);
+};
+
+},{"./utils":49}],48:[function(require,module,exports){
+// Load modules
+
+var Utils = require('./utils');
+
+
+// Declare internals
+
+var internals = {
+    delimiter: '&',
+    arrayPrefixGenerators: {
+        brackets: function (prefix, key) {
+
+            return prefix + '[]';
+        },
+        indices: function (prefix, key) {
+
+            return prefix + '[' + key + ']';
+        },
+        repeat: function (prefix, key) {
+
+            return prefix;
+        }
+    },
+    strictNullHandling: false
+};
+
+
+internals.stringify = function (obj, prefix, generateArrayPrefix, strictNullHandling, filter) {
+
+    if (typeof filter === 'function') {
+        obj = filter(prefix, obj);
+    }
+    else if (Utils.isBuffer(obj)) {
+        obj = obj.toString();
+    }
+    else if (obj instanceof Date) {
+        obj = obj.toISOString();
+    }
+    else if (obj === null) {
+        if (strictNullHandling) {
+            return Utils.encode(prefix);
+        }
+
+        obj = '';
+    }
+
+    if (typeof obj === 'string' ||
+        typeof obj === 'number' ||
+        typeof obj === 'boolean') {
+
+        return [Utils.encode(prefix) + '=' + Utils.encode(obj)];
+    }
+
+    var values = [];
+
+    if (typeof obj === 'undefined') {
+        return values;
+    }
+
+    var objKeys = Array.isArray(filter) ? filter : Object.keys(obj);
+    for (var i = 0, il = objKeys.length; i < il; ++i) {
+        var key = objKeys[i];
+
+        if (Array.isArray(obj)) {
+            values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix, strictNullHandling, filter));
+        }
+        else {
+            values = values.concat(internals.stringify(obj[key], prefix + '[' + key + ']', generateArrayPrefix, strictNullHandling, filter));
+        }
+    }
+
+    return values;
+};
+
+
+module.exports = function (obj, options) {
+
+    options = options || {};
+    var delimiter = typeof options.delimiter === 'undefined' ? internals.delimiter : options.delimiter;
+    var strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : internals.strictNullHandling;
+    var objKeys;
+    var filter;
+    if (typeof options.filter === 'function') {
+        filter = options.filter;
+        obj = filter('', obj);
+    }
+    else if (Array.isArray(options.filter)) {
+        objKeys = filter = options.filter;
+    }
+
+    var keys = [];
+
+    if (typeof obj !== 'object' ||
+        obj === null) {
+
+        return '';
+    }
+
+    var arrayFormat;
+    if (options.arrayFormat in internals.arrayPrefixGenerators) {
+        arrayFormat = options.arrayFormat;
+    }
+    else if ('indices' in options) {
+        arrayFormat = options.indices ? 'indices' : 'repeat';
+    }
+    else {
+        arrayFormat = 'indices';
+    }
+
+    var generateArrayPrefix = internals.arrayPrefixGenerators[arrayFormat];
+
+    if (!objKeys) {
+        objKeys = Object.keys(obj);
+    }
+    for (var i = 0, il = objKeys.length; i < il; ++i) {
+        var key = objKeys[i];
+        keys = keys.concat(internals.stringify(obj[key], key, generateArrayPrefix, strictNullHandling, filter));
+    }
+
+    return keys.join(delimiter);
+};
+
+},{"./utils":49}],49:[function(require,module,exports){
+// Load modules
+
+
+// Declare internals
+
+var internals = {};
+internals.hexTable = new Array(256);
+for (var h = 0; h < 256; ++h) {
+    internals.hexTable[h] = '%' + ((h < 16 ? '0' : '') + h.toString(16)).toUpperCase();
+}
+
+
+exports.arrayToObject = function (source, options) {
+
+    var obj = options.plainObjects ? Object.create(null) : {};
+    for (var i = 0, il = source.length; i < il; ++i) {
+        if (typeof source[i] !== 'undefined') {
+
+            obj[i] = source[i];
+        }
+    }
+
+    return obj;
+};
+
+
+exports.merge = function (target, source, options) {
+
+    if (!source) {
+        return target;
+    }
+
+    if (typeof source !== 'object') {
+        if (Array.isArray(target)) {
+            target.push(source);
+        }
+        else if (typeof target === 'object') {
+            target[source] = true;
+        }
+        else {
+            target = [target, source];
+        }
+
+        return target;
+    }
+
+    if (typeof target !== 'object') {
+        target = [target].concat(source);
+        return target;
+    }
+
+    if (Array.isArray(target) &&
+        !Array.isArray(source)) {
+
+        target = exports.arrayToObject(target, options);
+    }
+
+    var keys = Object.keys(source);
+    for (var k = 0, kl = keys.length; k < kl; ++k) {
+        var key = keys[k];
+        var value = source[key];
+
+        if (!Object.prototype.hasOwnProperty.call(target, key)) {
+            target[key] = value;
+        }
+        else {
+            target[key] = exports.merge(target[key], value, options);
+        }
+    }
+
+    return target;
+};
+
+
+exports.decode = function (str) {
+
+    try {
+        return decodeURIComponent(str.replace(/\+/g, ' '));
+    } catch (e) {
+        return str;
+    }
+};
+
+exports.encode = function (str) {
+
+    // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
+    // It has been adapted here for stricter adherence to RFC 3986
+    if (str.length === 0) {
+        return str;
+    }
+
+    if (typeof str !== 'string') {
+        str = '' + str;
+    }
+
+    var out = '';
+    for (var i = 0, il = str.length; i < il; ++i) {
+        var c = str.charCodeAt(i);
+
+        if (c === 0x2D || // -
+            c === 0x2E || // .
+            c === 0x5F || // _
+            c === 0x7E || // ~
+            (c >= 0x30 && c <= 0x39) || // 0-9
+            (c >= 0x41 && c <= 0x5A) || // a-z
+            (c >= 0x61 && c <= 0x7A)) { // A-Z
+
+            out += str[i];
+            continue;
+        }
+
+        if (c < 0x80) {
+            out += internals.hexTable[c];
+            continue;
+        }
+
+        if (c < 0x800) {
+            out += internals.hexTable[0xC0 | (c >> 6)] + internals.hexTable[0x80 | (c & 0x3F)];
+            continue;
+        }
+
+        if (c < 0xD800 || c >= 0xE000) {
+            out += internals.hexTable[0xE0 | (c >> 12)] + internals.hexTable[0x80 | ((c >> 6) & 0x3F)] + internals.hexTable[0x80 | (c & 0x3F)];
+            continue;
+        }
+
+        ++i;
+        c = 0x10000 + (((c & 0x3FF) << 10) | (str.charCodeAt(i) & 0x3FF));
+        out += internals.hexTable[0xF0 | (c >> 18)] + internals.hexTable[0x80 | ((c >> 12) & 0x3F)] + internals.hexTable[0x80 | ((c >> 6) & 0x3F)] + internals.hexTable[0x80 | (c & 0x3F)];
+    }
+
+    return out;
+};
+
+exports.compact = function (obj, refs) {
+
+    if (typeof obj !== 'object' ||
+        obj === null) {
+
+        return obj;
+    }
+
+    refs = refs || [];
+    var lookup = refs.indexOf(obj);
+    if (lookup !== -1) {
+        return refs[lookup];
+    }
+
+    refs.push(obj);
+
+    if (Array.isArray(obj)) {
+        var compacted = [];
+
+        for (var i = 0, il = obj.length; i < il; ++i) {
+            if (typeof obj[i] !== 'undefined') {
+                compacted.push(obj[i]);
+            }
+        }
+
+        return compacted;
+    }
+
+    var keys = Object.keys(obj);
+    for (i = 0, il = keys.length; i < il; ++i) {
+        var key = keys[i];
+        obj[key] = exports.compact(obj[key], refs);
+    }
+
+    return obj;
+};
+
+
+exports.isRegExp = function (obj) {
+
+    return Object.prototype.toString.call(obj) === '[object RegExp]';
+};
+
+
+exports.isBuffer = function (obj) {
+
+    if (obj === null ||
+        typeof obj === 'undefined') {
+
+        return false;
+    }
+
+    return !!(obj.constructor &&
+              obj.constructor.isBuffer &&
+              obj.constructor.isBuffer(obj));
+};
+
+},{}],50:[function(require,module,exports){
+
+/**
+ * Reduce `arr` with `fn`.
+ *
+ * @param {Array} arr
+ * @param {Function} fn
+ * @param {Mixed} initial
+ *
+ * TODO: combatible error handling?
+ */
+
+module.exports = function(arr, fn, initial){  
+  var idx = 0;
+  var len = arr.length;
+  var curr = arguments.length == 3
+    ? initial
+    : arr[idx++];
+
+  while (idx < len) {
+    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+  }
+  
+  return curr;
+};
+},{}],51:[function(require,module,exports){
+/**
+ * Module dependencies.
+ */
+
+var Emitter = require('emitter');
+var reduce = require('reduce');
+
+/**
+ * Root reference for iframes.
+ */
+
+var root = 'undefined' == typeof window
+  ? (this || self)
+  : window;
+
+/**
+ * Noop.
+ */
+
+function noop(){};
+
+/**
+ * Check if `obj` is a host object,
+ * we don't want to serialize these :)
+ *
+ * TODO: future proof, move to compoent land
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isHost(obj) {
+  var str = {}.toString.call(obj);
+
+  switch (str) {
+    case '[object File]':
+    case '[object Blob]':
+    case '[object FormData]':
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Determine XHR.
+ */
+
+request.getXHR = function () {
+  if (root.XMLHttpRequest
+      && (!root.location || 'file:' != root.location.protocol
+          || !root.ActiveXObject)) {
+    return new XMLHttpRequest;
+  } else {
+    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+  }
+  return false;
+};
+
+/**
+ * Removes leading and trailing whitespace, added to support IE.
+ *
+ * @param {String} s
+ * @return {String}
+ * @api private
+ */
+
+var trim = ''.trim
+  ? function(s) { return s.trim(); }
+  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
+
+/**
+ * Check if `obj` is an object.
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isObject(obj) {
+  return obj === Object(obj);
+}
+
+/**
+ * Serialize the given `obj`.
+ *
+ * @param {Object} obj
+ * @return {String}
+ * @api private
+ */
+
+function serialize(obj) {
+  if (!isObject(obj)) return obj;
+  var pairs = [];
+  for (var key in obj) {
+    if (null != obj[key]) {
+      pairs.push(encodeURIComponent(key)
+        + '=' + encodeURIComponent(obj[key]));
+    }
+  }
+  return pairs.join('&');
+}
+
+/**
+ * Expose serialization method.
+ */
+
+ request.serializeObject = serialize;
+
+ /**
+  * Parse the given x-www-form-urlencoded `str`.
+  *
+  * @param {String} str
+  * @return {Object}
+  * @api private
+  */
+
+function parseString(str) {
+  var obj = {};
+  var pairs = str.split('&');
+  var parts;
+  var pair;
+
+  for (var i = 0, len = pairs.length; i < len; ++i) {
+    pair = pairs[i];
+    parts = pair.split('=');
+    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+  }
+
+  return obj;
+}
+
+/**
+ * Expose parser.
+ */
+
+request.parseString = parseString;
+
+/**
+ * Default MIME type map.
+ *
+ *     superagent.types.xml = 'application/xml';
+ *
+ */
+
+request.types = {
+  html: 'text/html',
+  json: 'application/json',
+  xml: 'application/xml',
+  urlencoded: 'application/x-www-form-urlencoded',
+  'form': 'application/x-www-form-urlencoded',
+  'form-data': 'application/x-www-form-urlencoded'
+};
+
+/**
+ * Default serialization map.
+ *
+ *     superagent.serialize['application/xml'] = function(obj){
+ *       return 'generated xml here';
+ *     };
+ *
+ */
+
+ request.serialize = {
+   'application/x-www-form-urlencoded': serialize,
+   'application/json': JSON.stringify
+ };
+
+ /**
+  * Default parsers.
+  *
+  *     superagent.parse['application/xml'] = function(str){
+  *       return { object parsed from str };
+  *     };
+  *
+  */
+
+request.parse = {
+  'application/x-www-form-urlencoded': parseString,
+  'application/json': JSON.parse
+};
+
+/**
+ * Parse the given header `str` into
+ * an object containing the mapped fields.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function parseHeader(str) {
+  var lines = str.split(/\r?\n/);
+  var fields = {};
+  var index;
+  var line;
+  var field;
+  var val;
+
+  lines.pop(); // trailing CRLF
+
+  for (var i = 0, len = lines.length; i < len; ++i) {
+    line = lines[i];
+    index = line.indexOf(':');
+    field = line.slice(0, index).toLowerCase();
+    val = trim(line.slice(index + 1));
+    fields[field] = val;
+  }
+
+  return fields;
+}
+
+/**
+ * Return the mime type for the given `str`.
+ *
+ * @param {String} str
+ * @return {String}
+ * @api private
+ */
+
+function type(str){
+  return str.split(/ *; */).shift();
+};
+
+/**
+ * Return header field parameters.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function params(str){
+  return reduce(str.split(/ *; */), function(obj, str){
+    var parts = str.split(/ *= */)
+      , key = parts.shift()
+      , val = parts.shift();
+
+    if (key && val) obj[key] = val;
+    return obj;
+  }, {});
+};
+
+/**
+ * Initialize a new `Response` with the given `xhr`.
+ *
+ *  - set flags (.ok, .error, etc)
+ *  - parse header
+ *
+ * Examples:
+ *
+ *  Aliasing `superagent` as `request` is nice:
+ *
+ *      request = superagent;
+ *
+ *  We can use the promise-like API, or pass callbacks:
+ *
+ *      request.get('/').end(function(res){});
+ *      request.get('/', function(res){});
+ *
+ *  Sending data can be chained:
+ *
+ *      request
+ *        .post('/user')
+ *        .send({ name: 'tj' })
+ *        .end(function(res){});
+ *
+ *  Or passed to `.send()`:
+ *
+ *      request
+ *        .post('/user')
+ *        .send({ name: 'tj' }, function(res){});
+ *
+ *  Or passed to `.post()`:
+ *
+ *      request
+ *        .post('/user', { name: 'tj' })
+ *        .end(function(res){});
+ *
+ * Or further reduced to a single call for simple cases:
+ *
+ *      request
+ *        .post('/user', { name: 'tj' }, function(res){});
+ *
+ * @param {XMLHTTPRequest} xhr
+ * @param {Object} options
+ * @api private
+ */
+
+function Response(req, options) {
+  options = options || {};
+  this.req = req;
+  this.xhr = this.req.xhr;
+  // responseText is accessible only if responseType is '' or 'text' and on older browsers
+  this.text = ((this.req.method !='HEAD' && (this.xhr.responseType === '' || this.xhr.responseType === 'text')) || typeof this.xhr.responseType === 'undefined')
+     ? this.xhr.responseText
+     : null;
+  this.statusText = this.req.xhr.statusText;
+  this.setStatusProperties(this.xhr.status);
+  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
+  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
+  // getResponseHeader still works. so we get content-type even if getting
+  // other headers fails.
+  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
+  this.setHeaderProperties(this.header);
+  this.body = this.req.method != 'HEAD'
+    ? this.parseBody(this.text ? this.text : this.xhr.response)
+    : null;
+}
+
+/**
+ * Get case-insensitive `field` value.
+ *
+ * @param {String} field
+ * @return {String}
+ * @api public
+ */
+
+Response.prototype.get = function(field){
+  return this.header[field.toLowerCase()];
+};
+
+/**
+ * Set header related properties:
+ *
+ *   - `.type` the content type without params
+ *
+ * A response of "Content-Type: text/plain; charset=utf-8"
+ * will provide you with a `.type` of "text/plain".
+ *
+ * @param {Object} header
+ * @api private
+ */
+
+Response.prototype.setHeaderProperties = function(header){
+  // content-type
+  var ct = this.header['content-type'] || '';
+  this.type = type(ct);
+
+  // params
+  var obj = params(ct);
+  for (var key in obj) this[key] = obj[key];
+};
+
+/**
+ * Parse the given body `str`.
+ *
+ * Used for auto-parsing of bodies. Parsers
+ * are defined on the `superagent.parse` object.
+ *
+ * @param {String} str
+ * @return {Mixed}
+ * @api private
+ */
+
+Response.prototype.parseBody = function(str){
+  var parse = request.parse[this.type];
+  return parse && str && (str.length || str instanceof Object)
+    ? parse(str)
+    : null;
+};
+
+/**
+ * Set flags such as `.ok` based on `status`.
+ *
+ * For example a 2xx response will give you a `.ok` of __true__
+ * whereas 5xx will be __false__ and `.error` will be __true__. The
+ * `.clientError` and `.serverError` are also available to be more
+ * specific, and `.statusType` is the class of error ranging from 1..5
+ * sometimes useful for mapping respond colors etc.
+ *
+ * "sugar" properties are also defined for common cases. Currently providing:
+ *
+ *   - .noContent
+ *   - .badRequest
+ *   - .unauthorized
+ *   - .notAcceptable
+ *   - .notFound
+ *
+ * @param {Number} status
+ * @api private
+ */
+
+Response.prototype.setStatusProperties = function(status){
+  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+  if (status === 1223) {
+    status = 204;
+  }
+
+  var type = status / 100 | 0;
+
+  // status / class
+  this.status = status;
+  this.statusType = type;
+
+  // basics
+  this.info = 1 == type;
+  this.ok = 2 == type;
+  this.clientError = 4 == type;
+  this.serverError = 5 == type;
+  this.error = (4 == type || 5 == type)
+    ? this.toError()
+    : false;
+
+  // sugar
+  this.accepted = 202 == status;
+  this.noContent = 204 == status;
+  this.badRequest = 400 == status;
+  this.unauthorized = 401 == status;
+  this.notAcceptable = 406 == status;
+  this.notFound = 404 == status;
+  this.forbidden = 403 == status;
+};
+
+/**
+ * Return an `Error` representative of this response.
+ *
+ * @return {Error}
+ * @api public
+ */
+
+Response.prototype.toError = function(){
+  var req = this.req;
+  var method = req.method;
+  var url = req.url;
+
+  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
+  var err = new Error(msg);
+  err.status = this.status;
+  err.method = method;
+  err.url = url;
+
+  return err;
+};
+
+/**
+ * Expose `Response`.
+ */
+
+request.Response = Response;
+
+/**
+ * Initialize a new `Request` with the given `method` and `url`.
+ *
+ * @param {String} method
+ * @param {String} url
+ * @api public
+ */
+
+function Request(method, url) {
+  var self = this;
+  Emitter.call(this);
+  this._query = this._query || [];
+  this.method = method;
+  this.url = url;
+  this.header = {};
+  this._header = {};
+  this.on('end', function(){
+    var err = null;
+    var res = null;
+
+    try {
+      res = new Response(self);
+    } catch(e) {
+      err = new Error('Parser is unable to parse the response');
+      err.parse = true;
+      err.original = e;
+      return self.callback(err);
+    }
+
+    self.emit('response', res);
+
+    if (err) {
+      return self.callback(err, res);
+    }
+
+    if (res.status >= 200 && res.status < 300) {
+      return self.callback(err, res);
+    }
+
+    var new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
+    new_err.original = err;
+    new_err.response = res;
+    new_err.status = res.status;
+
+    self.callback(err || new_err, res);
+  });
+}
+
+/**
+ * Mixin `Emitter`.
+ */
+
+Emitter(Request.prototype);
+
+/**
+ * Allow for extension
+ */
+
+Request.prototype.use = function(fn) {
+  fn(this);
+  return this;
+}
+
+/**
+ * Set timeout to `ms`.
+ *
+ * @param {Number} ms
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.timeout = function(ms){
+  this._timeout = ms;
+  return this;
+};
+
+/**
+ * Clear previous timeout.
+ *
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.clearTimeout = function(){
+  this._timeout = 0;
+  clearTimeout(this._timer);
+  return this;
+};
+
+/**
+ * Abort the request, and clear potential timeout.
+ *
+ * @return {Request}
+ * @api public
+ */
+
+Request.prototype.abort = function(){
+  if (this.aborted) return;
+  this.aborted = true;
+  this.xhr.abort();
+  this.clearTimeout();
+  this.emit('abort');
+  return this;
+};
+
+/**
+ * Set header `field` to `val`, or multiple fields with one object.
+ *
+ * Examples:
+ *
+ *      req.get('/')
+ *        .set('Accept', 'application/json')
+ *        .set('X-API-Key', 'foobar')
+ *        .end(callback);
+ *
+ *      req.get('/')
+ *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
+ *        .end(callback);
+ *
+ * @param {String|Object} field
+ * @param {String} val
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.set = function(field, val){
+  if (isObject(field)) {
+    for (var key in field) {
+      this.set(key, field[key]);
+    }
+    return this;
+  }
+  this._header[field.toLowerCase()] = val;
+  this.header[field] = val;
+  return this;
+};
+
+/**
+ * Remove header `field`.
+ *
+ * Example:
+ *
+ *      req.get('/')
+ *        .unset('User-Agent')
+ *        .end(callback);
+ *
+ * @param {String} field
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.unset = function(field){
+  delete this._header[field.toLowerCase()];
+  delete this.header[field];
+  return this;
+};
+
+/**
+ * Get case-insensitive header `field` value.
+ *
+ * @param {String} field
+ * @return {String}
+ * @api private
+ */
+
+Request.prototype.getHeader = function(field){
+  return this._header[field.toLowerCase()];
+};
+
+/**
+ * Set Content-Type to `type`, mapping values from `request.types`.
+ *
+ * Examples:
+ *
+ *      superagent.types.xml = 'application/xml';
+ *
+ *      request.post('/')
+ *        .type('xml')
+ *        .send(xmlstring)
+ *        .end(callback);
+ *
+ *      request.post('/')
+ *        .type('application/xml')
+ *        .send(xmlstring)
+ *        .end(callback);
+ *
+ * @param {String} type
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.type = function(type){
+  this.set('Content-Type', request.types[type] || type);
+  return this;
+};
+
+/**
+ * Set Accept to `type`, mapping values from `request.types`.
+ *
+ * Examples:
+ *
+ *      superagent.types.json = 'application/json';
+ *
+ *      request.get('/agent')
+ *        .accept('json')
+ *        .end(callback);
+ *
+ *      request.get('/agent')
+ *        .accept('application/json')
+ *        .end(callback);
+ *
+ * @param {String} accept
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.accept = function(type){
+  this.set('Accept', request.types[type] || type);
+  return this;
+};
+
+/**
+ * Set Authorization field value with `user` and `pass`.
+ *
+ * @param {String} user
+ * @param {String} pass
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.auth = function(user, pass){
+  var str = btoa(user + ':' + pass);
+  this.set('Authorization', 'Basic ' + str);
+  return this;
+};
+
+/**
+* Add query-string `val`.
+*
+* Examples:
+*
+*   request.get('/shoes')
+*     .query('size=10')
+*     .query({ color: 'blue' })
+*
+* @param {Object|String} val
+* @return {Request} for chaining
+* @api public
+*/
+
+Request.prototype.query = function(val){
+  if ('string' != typeof val) val = serialize(val);
+  if (val) this._query.push(val);
+  return this;
+};
+
+/**
+ * Write the field `name` and `val` for "multipart/form-data"
+ * request bodies.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .field('foo', 'bar')
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} name
+ * @param {String|Blob|File} val
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.field = function(name, val){
+  if (!this._formData) this._formData = new root.FormData();
+  this._formData.append(name, val);
+  return this;
+};
+
+/**
+ * Queue the given `file` as an attachment to the specified `field`,
+ * with optional `filename`.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} field
+ * @param {Blob|File} file
+ * @param {String} filename
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.attach = function(field, file, filename){
+  if (!this._formData) this._formData = new root.FormData();
+  this._formData.append(field, file, filename);
+  return this;
+};
+
+/**
+ * Send `data`, defaulting the `.type()` to "json" when
+ * an object is given.
+ *
+ * Examples:
+ *
+ *       // querystring
+ *       request.get('/search')
+ *         .end(callback)
+ *
+ *       // multiple data "writes"
+ *       request.get('/search')
+ *         .send({ search: 'query' })
+ *         .send({ range: '1..5' })
+ *         .send({ order: 'desc' })
+ *         .end(callback)
+ *
+ *       // manual json
+ *       request.post('/user')
+ *         .type('json')
+ *         .send('{"name":"tj"})
+ *         .end(callback)
+ *
+ *       // auto json
+ *       request.post('/user')
+ *         .send({ name: 'tj' })
+ *         .end(callback)
+ *
+ *       // manual x-www-form-urlencoded
+ *       request.post('/user')
+ *         .type('form')
+ *         .send('name=tj')
+ *         .end(callback)
+ *
+ *       // auto x-www-form-urlencoded
+ *       request.post('/user')
+ *         .type('form')
+ *         .send({ name: 'tj' })
+ *         .end(callback)
+ *
+ *       // defaults to x-www-form-urlencoded
+  *      request.post('/user')
+  *        .send('name=tobi')
+  *        .send('species=ferret')
+  *        .end(callback)
+ *
+ * @param {String|Object} data
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.send = function(data){
+  var obj = isObject(data);
+  var type = this.getHeader('Content-Type');
+
+  // merge
+  if (obj && isObject(this._data)) {
+    for (var key in data) {
+      this._data[key] = data[key];
+    }
+  } else if ('string' == typeof data) {
+    if (!type) this.type('form');
+    type = this.getHeader('Content-Type');
+    if ('application/x-www-form-urlencoded' == type) {
+      this._data = this._data
+        ? this._data + '&' + data
+        : data;
+    } else {
+      this._data = (this._data || '') + data;
+    }
+  } else {
+    this._data = data;
+  }
+
+  if (!obj || isHost(data)) return this;
+  if (!type) this.type('json');
+  return this;
+};
+
+/**
+ * Invoke the callback with `err` and `res`
+ * and handle arity check.
+ *
+ * @param {Error} err
+ * @param {Response} res
+ * @api private
+ */
+
+Request.prototype.callback = function(err, res){
+  var fn = this._callback;
+  this.clearTimeout();
+  fn(err, res);
+};
+
+/**
+ * Invoke callback with x-domain error.
+ *
+ * @api private
+ */
+
+Request.prototype.crossDomainError = function(){
+  var err = new Error('Origin is not allowed by Access-Control-Allow-Origin');
+  err.crossDomain = true;
+  this.callback(err);
+};
+
+/**
+ * Invoke callback with timeout error.
+ *
+ * @api private
+ */
+
+Request.prototype.timeoutError = function(){
+  var timeout = this._timeout;
+  var err = new Error('timeout of ' + timeout + 'ms exceeded');
+  err.timeout = timeout;
+  this.callback(err);
+};
+
+/**
+ * Enable transmission of cookies with x-domain requests.
+ *
+ * Note that for this to work the origin must not be
+ * using "Access-Control-Allow-Origin" with a wildcard,
+ * and also must set "Access-Control-Allow-Credentials"
+ * to "true".
+ *
+ * @api public
+ */
+
+Request.prototype.withCredentials = function(){
+  this._withCredentials = true;
+  return this;
+};
+
+/**
+ * Initiate request, invoking callback `fn(res)`
+ * with an instanceof `Response`.
+ *
+ * @param {Function} fn
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.end = function(fn){
+  var self = this;
+  var xhr = this.xhr = request.getXHR();
+  var query = this._query.join('&');
+  var timeout = this._timeout;
+  var data = this._formData || this._data;
+
+  // store callback
+  this._callback = fn || noop;
+
+  // state change
+  xhr.onreadystatechange = function(){
+    if (4 != xhr.readyState) return;
+
+    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
+    // result in the error "Could not complete the operation due to error c00c023f"
+    var status;
+    try { status = xhr.status } catch(e) { status = 0; }
+
+    if (0 == status) {
+      if (self.timedout) return self.timeoutError();
+      if (self.aborted) return;
+      return self.crossDomainError();
+    }
+    self.emit('end');
+  };
+
+  // progress
+  var handleProgress = function(e){
+    if (e.total > 0) {
+      e.percent = e.loaded / e.total * 100;
+    }
+    self.emit('progress', e);
+  };
+  if (this.hasListeners('progress')) {
+    xhr.onprogress = handleProgress;
+  }
+  try {
+    if (xhr.upload && this.hasListeners('progress')) {
+      xhr.upload.onprogress = handleProgress;
+    }
+  } catch(e) {
+    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
+    // Reported here:
+    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
+  }
+
+  // timeout
+  if (timeout && !this._timer) {
+    this._timer = setTimeout(function(){
+      self.timedout = true;
+      self.abort();
+    }, timeout);
+  }
+
+  // querystring
+  if (query) {
+    query = request.serializeObject(query);
+    this.url += ~this.url.indexOf('?')
+      ? '&' + query
+      : '?' + query;
+  }
+
+  // initiate request
+  xhr.open(this.method, this.url, true);
+
+  // CORS
+  if (this._withCredentials) xhr.withCredentials = true;
+
+  // body
+  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
+    // serialize stuff
+    var serialize = request.serialize[this.getHeader('Content-Type')];
+    if (serialize) data = serialize(data);
+  }
+
+  // set header fields
+  for (var field in this.header) {
+    if (null == this.header[field]) continue;
+    xhr.setRequestHeader(field, this.header[field]);
+  }
+
+  // send stuff
+  this.emit('request', this);
+  xhr.send(data);
+  return this;
+};
+
+/**
+ * Expose `Request`.
+ */
+
+request.Request = Request;
+
+/**
+ * Issue a request:
+ *
+ * Examples:
+ *
+ *    request('GET', '/users').end(callback)
+ *    request('/users').end(callback)
+ *    request('/users', callback)
+ *
+ * @param {String} method
+ * @param {String|Function} url or callback
+ * @return {Request}
+ * @api public
+ */
+
+function request(method, url) {
+  // callback
+  if ('function' == typeof url) {
+    return new Request('GET', method).end(url);
+  }
+
+  // url first
+  if (1 == arguments.length) {
+    return new Request('GET', method);
+  }
+
+  return new Request(method, url);
+}
+
+/**
+ * GET `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.get = function(url, data, fn){
+  var req = request('GET', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.query(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * HEAD `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.head = function(url, data, fn){
+  var req = request('HEAD', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * DELETE `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.del = function(url, fn){
+  var req = request('DELETE', url);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * PATCH `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed} data
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.patch = function(url, data, fn){
+  var req = request('PATCH', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * POST `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed} data
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.post = function(url, data, fn){
+  var req = request('POST', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * PUT `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.put = function(url, data, fn){
+  var req = request('PUT', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * Expose `request`.
+ */
+
+module.exports = request;
+
+},{"emitter":41,"reduce":50}],52:[function(require,module,exports){
+'use strict';
+var camelCase = require('camelcase');
+
+module.exports = function () {
+	var cased = camelCase.apply(camelCase, arguments);
+	return cased.charAt(0).toUpperCase() + cased.slice(1);
+};
+
+},{"camelcase":40}],53:[function(require,module,exports){
+var uppercamelcase = require('uppercamelcase');
+var statusCodes = require('builtin-status-codes');
+
+module.exports = WPError;
+
+function WPError () {
+  var self = new Error();
+
+  for (var i = 0; i < arguments.length; i++) {
+    process(self, arguments[i]);
+  }
+
+  if (typeof Error.captureStackTrace === 'function') {
+    Error.captureStackTrace(self, WPError);
+  }
+
+  return self;
+}
+
+function process ( self, data ) {
+  if (typeof data === 'number') {
+    setStatusCode( self, data );
+
+  } else {
+    // assume it's a plain 'ol Object with some props to copy over
+    if ( data.status_code ) {
+      setStatusCode( self, data.status_code );
+    }
+
+    if ( data.error ) {
+      self.name = toName( data.error );
+    }
+
+    if ( data.error_description ) {
+      self.message = data.error_description;
+    }
+
+    var errors = data.errors;
+    if ( errors ) {
+      var first = errors.length ? errors[0] : errors;
+      process( self, first );
+    }
+
+    for ( var i in data ) {
+      self[i] = data[i];
+    }
+
+    if ( self.status && ( data.method || data.path ) ) {
+      setStatusCodeMessage( self );
+    }
+  }
+}
+
+function setStatusCode ( self, code ) {
+  self.name = toName( statusCodes[ code ] );
+  self.status = self.statusCode = code;
+  setStatusCodeMessage( self );
+}
+
+function setStatusCodeMessage ( self ) {
+  var code = self.status;
+  var method = self.method;
+  var path = self.path;
+
+  var m = code + ' status code';
+  var extended = method || path;
+
+  if ( extended ) m += ' for "';
+  if ( method ) m += method;
+  if ( extended ) m += ' ';
+  if ( path ) m += path;
+  if ( extended ) m += '"';
+
+  self.message = m;
+}
+
+function toName ( str ) {
+  return uppercamelcase( String(str).replace(/error$/i, ''), 'error' );
+}
+
+},{"builtin-status-codes":39,"uppercamelcase":52}],54:[function(require,module,exports){
+
+/**
+ * Module dependencies.
+ */
+
+var WPError = require('wp-error');
+var superagent = require('superagent');
+var debug = require('debug')('wpcom-xhr-request');
+
+/**
+ * Export a single `request` function.
+ */
+
+module.exports = request;
+
+/**
+ * WordPress.com REST API base endpoint.
+ */
+
+var proxyOrigin = 'https://public-api.wordpress.com';
+
+/**
+ * Default WordPress.com REST API Version.
+ */
+
+var defaultApiVersion = '1';
+
+/**
+ * Performs an XMLHttpRequest against the WordPress.com REST API.
+ *
+ * @param {Object|String} params
+ * @param {Function} fn
+ * @api public
+ */
+
+function request (params, fn) {
+
+  if ('string' == typeof params) {
+    params = { path: params };
+  }
+
+  var method = (params.method || 'GET').toLowerCase();
+  debug('API HTTP Method: %o', method);
+  delete params.method;
+
+  var apiVersion = params.apiVersion || defaultApiVersion;
+  delete params.apiVersion;
+
+  var apiNamespace = params.apiNamespace;
+  delete params.apiNamespace;
+
+  proxyOrigin = params.proxyOrigin || proxyOrigin;
+  delete params.proxyOrigin;
+
+  var basePath = '/rest/v' + apiVersion;
+
+  // If this is a WP-API request, adjust basePath
+  if ( apiNamespace && /\//.test( apiNamespace ) ) {
+    // New-style WP-API URL: /wpcom/v2/sites/%s/post-counts
+    basePath = '/' + apiNamespace;
+  } else if ( apiNamespace ) {
+    // Old-style WP-API URL (deprecated): /wp-json/sites/%s/wpcom/v2/post-counts
+    basePath = '/wp-json';
+  }
+
+  var url = proxyOrigin + basePath + params.path;
+  debug('API URL: %o', url);
+  delete params.path;
+
+  // create HTTP Request object
+  var req = superagent[method](url);
+
+  // Token authentication
+  if (params.authToken) {
+    req.set('Authorization', 'Bearer ' + params.authToken);
+    delete params.authToken;
+  }
+
+  // URL querystring values
+  if (params.query) {
+    req.query(params.query);
+    debug('API send URL querystring: %o', params.query);
+    delete params.query;
+  }
+
+  // POST API request body
+  if (params.body) {
+    req.send(params.body);
+    debug('API send POST body: %o', params.body);
+    delete params.body;
+  }
+
+  // POST FormData (for `multipart/form-data`, usually a file upload)
+  if (params.formData) {
+    for (var i = 0; i < params.formData.length; i++) {
+      var data = params.formData[i];
+      var key = data[0];
+      var value = data[1];
+      debug('adding FormData field %o', key);
+      req.field(key, value);
+    }
+  }
+
+  // start the request
+  req.end(function (err, res){
+    if (err && !res) {
+      return fn(err);
+    }
+
+    var body = res.body;
+    var headers = res.headers;
+    var statusCode = res.status;
+    debug('%o -> %o status code', url, statusCode);
+
+    if (body && headers) {
+      body._headers = headers;
+    }
+
+    if (res.ok) {
+      fn(null, body);
+    } else {
+      var wpe = WPError({
+        path: res.req.path, method: res.req.method
+      }, statusCode, body);
+
+      fn(wpe);
+    }
+  });
+
+  return req.xhr;
+}
+
+},{"debug":42,"superagent":51,"wp-error":53}],55:[function(require,module,exports){
+var _Promise = require('babel-runtime/core-js/promise')['default'];
+
+/**
+ * Module dependencies.
+ */
+var requestHandler = require('wpcom-xhr-request');
+
+/**
+ * Local module dependencies.
+ */
+var Me = require('./lib/me');
+var Site = require('./lib/site');
+var Domains = require('./lib/domains');
+var Domain = require('./lib/domain');
+var Users = require('./lib/users');
+var Batch = require('./lib/batch');
+var Req = require('./lib/util/request');
+var sendRequest = require('./lib/util/send-request');
+var debug = require('debug')('wpcom');
+
+/**
+ * Local module constants
+ */
+var DEFAULT_ASYNC_TIMEOUT = 30000;
+
+/**
+ * XMLHttpRequest (and CORS) API access method.
+ *
+ * API authentication is done via an (optional) access `token`,
+ * which needs to be retrieved via OAuth.
+ *
+ * Request Handler is optional and XHR is defined as default.
+ *
+ * @param {String} [token] - OAuth API access token
+ * @param {Function} [reqHandler] - function Request Handler
+ * @return {WPCOM} wpcom instance
+ */
+function WPCOM(token, reqHandler) {
+	if (!(this instanceof WPCOM)) {
+		return new WPCOM(token, reqHandler);
+	}
+
+	// `token` is optional
+	if ('function' === typeof token) {
+		reqHandler = token;
+		token = null;
+	}
+
+	if (token) {
+		debug('Token defined: %s…', token.substring(0, 6));
+		this.token = token;
+	}
+
+	// Set default request handler
+	if (!reqHandler) {
+		debug('No request handler. Adding default XHR request handler');
+
+		this.request = function (params, fn) {
+			params = params || {};
+
+			// token is optional
+			if (token) {
+				params.authToken = token;
+			}
+
+			return requestHandler(params, fn);
+		};
+	} else {
+		this.request = reqHandler;
+	}
+
+	// Add Req instance
+	this.req = new Req(this);
+
+	// Default api version;
+	this.apiVersion = '1.1';
+}
+
+/**
+ * Return `Me` object instance
+ *
+ * @return {Me} Me instance
+ */
+WPCOM.prototype.me = function () {
+	return new Me(this);
+};
+
+/**
+ * Return `Domains` object instance
+ *
+ * @return {Domains} Domains instance
+ */
+WPCOM.prototype.domains = function () {
+	return new Domains(this);
+};
+
+/**
+ * Return `Domain` object instance
+ *
+ * @param {String} domainId - domain identifier
+ * @return {Domain} Domain instance
+ */
+WPCOM.prototype.domain = function (domainId) {
+	return new Domain(domainId, this);
+};
+
+/**
+ * Return `Site` object instance
+ *
+ * @param {String} id - site identifier
+ * @return {Site} Site instance
+ */
+WPCOM.prototype.site = function (id) {
+	return new Site(id, this);
+};
+
+/**
+ * Return `Users` object instance
+ *
+ * @return {Users} Users instance
+ */
+WPCOM.prototype.users = function () {
+	return new Users(this);
+};
+
+/**
+* Return `Batch` object instance
+*
+* @return {Batch} Batch instance
+*/
+WPCOM.prototype.batch = function () {
+	return new Batch(this);
+};
+
+/**
+ * List Freshly Pressed Posts
+ *
+ * @param {Object} [query] - query object
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+WPCOM.prototype.freshlyPressed = function (query, fn) {
+	return this.req.get('/freshly-pressed', query, fn);
+};
+
+/**
+ * Expose send-request
+ * @TODO: use `this.req` instead of this method
+ */
+
+WPCOM.prototype.sendRequest = function (params, query, body, fn) {
+	var msg = 'WARN! Don use `sendRequest() anymore. Use `this.req` method.';
+
+	if (console && console.warn) {
+		console.warn(msg);
+	} else {
+		console.log(msg);
+	}
+
+	return sendRequest.call(this, params, query, body, fn);
+};
+
+if (!_Promise.prototype.timeout) {
+	/**
+ * Returns a new promise with a deadline
+ *
+ * After the timeout interval, the promise will
+ * reject. If the actual promise settles before
+ * the deadline, the timer is cancelled.
+ *
+ * @param {number} delay how many ms to wait
+ * @return {Promise} promise
+ */
+	_Promise.prototype.timeout = function () {
+		var _this = this;
+
+		var delay = arguments.length <= 0 || arguments[0] === undefined ? DEFAULT_ASYNC_TIMEOUT : arguments[0];
+
+		var cancelTimeout = undefined,
+		    timer = undefined,
+		    timeout = undefined;
+
+		timeout = new _Promise(function (resolve, reject) {
+			timer = setTimeout(function () {
+				reject(new Error('Action timed out while waiting for response.'));
+			}, delay);
+		});
+
+		cancelTimeout = function () {
+			clearTimeout(timer);
+			return _this;
+		};
+
+		return _Promise.race([this.then(cancelTimeout)['catch'](cancelTimeout), timeout]);
+	};
+}
+
+/**
+ * Expose `WPCOM` module
+ */
+module.exports = WPCOM;
+
+},{"./lib/batch":56,"./lib/domain":59,"./lib/domains":60,"./lib/me":62,"./lib/site":77,"./lib/users":90,"./lib/util/request":91,"./lib/util/send-request":93,"babel-runtime/core-js/promise":2,"debug":42,"wpcom-xhr-request":54}],56:[function(require,module,exports){
+/**
+ * Create a `Batch` instance
+ *
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {null} null
+ * @api public
+ */
+function Batch(wpcom) {
+  if (!(this instanceof Batch)) {
+    return new Batch(wpcom);
+  }
+
+  this.wpcom = wpcom;
+  this.urls = [];
+}
+
+/**
+ * Add url to batch requests
+ *
+ * @param {String} url - endpoint url
+ * @return {Batch} batch instance
+ * @api public
+ */
+Batch.prototype.add = function (url) {
+  this.urls.push(url);
+  return this;
+};
+
+/**
+ * Run the batch request
+ *
+ * @param {Object} [query] - optional query parameter
+ * @param {Function} fn - callback
+ * @return {Function} request handler
+ * @api public
+ */
+Batch.prototype.run = function (query, fn) {
+  if (query === undefined) query = {};
+
+  if ('function' === typeof query) {
+    fn = query;
+    query = {};
+  }
+
+  // add urls to query object
+  query.urls = this.urls;
+
+  return this.wpcom.req.get('/batch', query, fn);
+};
+
+/**
+ * Expose `Batch` module
+ */
+module.exports = Batch;
+},{}],57:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+var root = '/domains/';
+
+var DomainDns = (function () {
+	/**
+  * `DomainDns` constructor.
+  *
+  * @param {String} domainId - domain identifier
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Undefined} undefined
+  */
+
+	function DomainDns(domainId, wpcom) {
+		_classCallCheck(this, DomainDns);
+
+		if (!(this instanceof DomainDns)) {
+			return new DomainDns(domainId, wpcom);
+		}
+
+		this._domain = domainId;
+		this._subpath = root + this._domain + '/dns';
+		this.wpcom = wpcom;
+	}
+
+	/**
+  * Expose `DomainDns` module
+  */
+
+	/**
+  * Adds a DNS record
+  *
+  * @param {Object} record - record
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(DomainDns, [{
+		key: 'add',
+		value: function add(record, query, fn) {
+			if ('function' === typeof query) {
+				fn = query;
+				query = {};
+			}
+
+			return this.wpcom.req.post(this._subpath + '/add', query, record, fn);
+		}
+
+		/**
+   * Delete a DNS record
+   *
+   * @param {String} record - record
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'delete',
+		value: function _delete(record, query, fn) {
+			return this.wpcom.req.post(this._subpath + '/delete', query, record, fn);
+		}
+	}]);
+
+	return DomainDns;
+})();
+
+exports['default'] = DomainDns;
+module.exports = exports['default'];
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],58:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+var root = '/domains/';
+
+var DomainEmail = (function () {
+	/**
+  * `DomainEmail` constructor.
+  *
+  * @param {String} [email] - email
+  * @param {String} domainId - domain identifier
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Undefined} undefined
+  */
+
+	function DomainEmail(email, domainId, wpcom) {
+		_classCallCheck(this, DomainEmail);
+
+		if (!(this instanceof DomainEmail)) {
+			return new DomainEmail(email, domainId, wpcom);
+		}
+
+		if (email) {
+			this._email = email;
+		}
+
+		this._domain = domainId;
+		this._subpath = root + this._domain + '/email/';
+		this.wpcom = wpcom;
+	}
+
+	/**
+  * Expose `DomainEmail` module
+  */
+
+	/**
+  * Update the email forwards/configuration for a domain.
+  *
+  * @param {String} destination - the email address to forward email to.
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(DomainEmail, [{
+		key: 'forward',
+		value: function forward(destination, query, fn) {
+			var body = { destination: destination };
+			return this.wpcom.req.post(this._subpath + this._email, query, body, fn);
+		}
+
+		/**
+   * Create an email forward for the domain
+   * if it has enough licenses.
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+
+	}, {
+		key: 'add',
+		value: function add(mailbox, destination, query, fn) {
+			if ('function' === typeof query) {
+				fn = query;
+				query = {};
+			}
+
+			var body = {
+				mailbox: mailbox,
+				destination: destination
+			};
+
+			return this.wpcom.req.post(this._subpath + 'new', query, body, fn);
+		}
+
+		/**
+   * Delete an email forward for the domain
+   *
+   * @param {String} mailbox - mailbox to alter
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'delete',
+		value: function _delete(mailbox, query, fn) {
+			return this.wpcom.req.del(this._subpath + mailbox + '/delete', query, fn);
+		}
+	}]);
+
+	return DomainEmail;
+})();
+
+exports['default'] = DomainEmail;
+module.exports = exports['default'];
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],59:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+/**
+ * Module dependencies
+ */
+
+var _domainEmail = require('./domain.email');
+
+var _domainEmail2 = _interopRequireDefault(_domainEmail);
+
+var _domainDns = require('./domain.dns');
+
+var _domainDns2 = _interopRequireDefault(_domainDns);
+
+var root = '/domains/';
+
+var Domain = (function () {
+	/**
+  * `Domain` constructor.
+  *
+  * @param {String} id - domain identifier
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Undefined} undefined
+  */
+
+	function Domain(id, wpcom) {
+		_classCallCheck(this, Domain);
+
+		if (!(this instanceof Domain)) {
+			return new Domain(id, wpcom);
+		}
+		this._id = id;
+		this.wpcom = wpcom;
+	}
+
+	/**
+  * Expose `Domain` module
+  */
+
+	/**
+  * Get the status of the domain
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(Domain, [{
+		key: 'status',
+		value: function status(query, fn) {
+			return this.wpcom.req.get(root + this._id + '/status', query, fn);
+		}
+
+		/**
+   * Check if the given domain is available
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'isAvailable',
+		value: function isAvailable(query, fn) {
+			return this.wpcom.req.get(root + this._id + '/is-available', query, fn);
+		}
+
+		/**
+   * Check if the given domain name can be mapped to
+   * a WordPress blog.
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'isMappable',
+		value: function isMappable(query, fn) {
+			return this.wpcom.req.get(root + this._id + '/is-mappable', query, fn);
+		}
+
+		/**
+   * Check if the given domain name can be used for site redirect.
+   *
+   * @param {String} siteId - site id of the site to check
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'canRedirect',
+		value: function canRedirect(siteId, query, fn) {
+			var path = root + siteId + '/' + this._id + '/can-redirect';
+			return this.wpcom.req.get(path, query, fn);
+		}
+
+		/**
+   * Get the email forwards/configuration for a domain.
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'emailForwards',
+		value: function emailForwards(query, fn) {
+			return this.wpcom.req.get(root + this._id + '/email', query, fn);
+		}
+
+		/**
+   * Get a list of the nameservers for the domain
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'nameserversList',
+		value: function nameserversList(query, fn) {
+			return this.wpcom.req.get(root + this._id + '/nameservers', query, fn);
+		}
+
+		/**
+   * Update the nameservers for the domain
+   *
+   * @param {Array} nameservers- nameservers list
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'updateNameservers',
+		value: function updateNameservers(nameservers, query, fn) {
+			var body = { nameservers: nameservers };
+			return this.wpcom.req.post(root + this._id + '/nameservers', query, body, fn);
+		}
+
+		/**
+   * Get a list of the DNS records for the domain
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'dnsList',
+		value: function dnsList(query, fn) {
+			return this.wpcom.req.get(root + this._id + '/dns', query, fn);
+		}
+
+		/**
+   * Get a list of all Google Apps accounts for the domain
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'googleAppsList',
+		value: function googleAppsList(query, fn) {
+			return this.wpcom.req.get(root + this._id + '/google-apps', query, fn);
+		}
+
+		/**
+   * Resend the ICANN verification email for the domain
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'resendICANN',
+		value: function resendICANN(query, fn) {
+			return this.wpcom.req.post(root + this._id + '/resend-icann', query, fn);
+		}
+
+		/**
+   * Return `DomainEmail` instance
+   *
+   * @param {String} [email] - email identifier
+   * @return {DomainEmail} DomainEmail instance
+   */
+	}, {
+		key: 'email',
+		value: function email(_email) {
+			return new _domainEmail2['default'](_email, this._id, this.wpcom);
+		}
+
+		/**
+   * Return `DomainDns` instance
+   *
+   * @return {DomainDns} DomainDns instance
+   */
+	}, {
+		key: 'dns',
+		value: function dns() {
+			return new _domainDns2['default'](this._id, this.wpcom);
+		}
+	}]);
+
+	return Domain;
+})();
+
+exports['default'] = Domain;
+module.exports = exports['default'];
+},{"./domain.dns":57,"./domain.email":58,"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4,"babel-runtime/helpers/interop-require-default":6}],60:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+var root = '/domains/';
+
+var Domains = (function () {
+	/**
+  * `Domains` constructor.
+  *
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Undefined} undefined
+  */
+
+	function Domains(wpcom) {
+		_classCallCheck(this, Domains);
+
+		if (!(this instanceof Domains)) {
+			return new Domains(wpcom);
+		}
+		this.wpcom = wpcom;
+	}
+
+	/**
+ * Expose `Domains` module
+ */
+
+	/**
+  * Get a list of suggested domain names that are available for
+  * registration based on a given term or domain name.
+  *
+  * @param {String|Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(Domains, [{
+		key: 'suggestions',
+		value: function suggestions(query, fn) {
+			if ('string' === typeof query) {
+				query = { query: query };
+			}
+			return this.wpcom.req.get(root + 'suggestions', query, fn);
+		}
+
+		/**
+   * GET example domain suggestions
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'suggestionsExamples',
+		value: function suggestionsExamples(query, fn) {
+			return this.wpcom.req.get(root + 'suggestions/examples', query, fn);
+		}
+
+		/**
+   * Get a localized list of supported countries for domain registrations.
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'supportedCountries',
+		value: function supportedCountries(query, fn) {
+			return this.wpcom.req.get(root + 'supported-countries', query, fn);
+		}
+
+		/**
+   * Get a localized list of supported states for domain registrations.
+   *
+   * @param {String} countryCode - country code ISO 3166-1 alpha-2 identifier
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'supportedStates',
+		value: function supportedStates(countryCode, query, fn) {
+			var path = root + 'supported-states/' + countryCode;
+			return this.wpcom.req.get(path, query, fn);
+		}
+	}]);
+
+	return Domains;
+})();
+
+exports['default'] = Domains;
+module.exports = exports['default'];
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],61:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var root = '/me/connected-applications/';
+
+var MeConnectedApp = (function () {
+
+	/**
+  * `MeConnectedApp` constructor.
+  *
+  * @param {String} appId - application identifier
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function MeConnectedApp(appId, wpcom) {
+		_classCallCheck(this, MeConnectedApp);
+
+		if (!(this instanceof MeConnectedApp)) {
+			return new MeConnectedApp(appId, wpcom);
+		}
+		this._id = appId;
+		this.wpcom = wpcom;
+	}
+
+	/**
+ * Expose `MeConnectedApp` module
+ */
+
+	/**
+  * Get one of current user's connected applications.
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(MeConnectedApp, [{
+		key: 'get',
+		value: function get(query, fn) {
+			return this.wpcom.req.get(root + this._id, query, fn);
+		}
+
+		/**
+   * Delete the app of the  current user
+   * through of the given appId
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'delete',
+		value: function _delete(query, fn) {
+			return this.wpcom.req.del(root + this._id + '/delete', query, fn);
+		}
+	}]);
+
+	return MeConnectedApp;
+})();
+
+module.exports = MeConnectedApp;
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],62:[function(require,module,exports){
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+/**
+ * Module dependencies
+ */
+
+var _meKeyringConnection = require('./me.keyring-connection');
+
+var _meKeyringConnection2 = _interopRequireDefault(_meKeyringConnection);
+
+var _meConnectedApplication = require('./me.connected-application');
+
+var _meConnectedApplication2 = _interopRequireDefault(_meConnectedApplication);
+
+var _mePublicizeConnection = require('./me.publicize-connection');
+
+var _mePublicizeConnection2 = _interopRequireDefault(_mePublicizeConnection);
+
+var _meSettings = require('./me.settings');
+
+var _meSettings2 = _interopRequireDefault(_meSettings);
+
+var _meTwoStep = require('./me.two-step');
+
+var _meTwoStep2 = _interopRequireDefault(_meTwoStep);
+
+/**
+ * Create `Me` instance
+ *
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Me(wpcom) {
+  if (!(this instanceof Me)) {
+    return new Me(wpcom);
+  }
+
+  this.wpcom = wpcom;
+}
+
+/**
+ * Meta data about auth token's User
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.get = function (query, fn) {
+  return this.wpcom.req.get('/me', query, fn);
+};
+
+/**
+ * Get user billing history.
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} [fn] - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.billingHistory = function (query, fn) {
+  return this.wpcom.req.get('/me/billing-history', query, fn);
+};
+
+/**
+ * Get a list of posts of from the user's blogs
+ *
+ * *Example:*
+ *    // Get posts list
+ *    wpcom
+ *    .me()
+ *    .postsList( function( err, data ) {
+ *      // posts list data object
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.postsList = function (query, fn) {
+  return this.wpcom.req.get('/me/posts', query, fn);
+};
+
+/**
+ * A list of the current user's sites
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.sites = function (query, fn) {
+  return this.wpcom.req.get('/me/sites', query, fn);
+};
+
+/**
+ * List the currently authorized user's likes
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.likes = function (query, fn) {
+  return this.wpcom.req.get('/me/likes', query, fn);
+};
+
+/**
+ * A list of the current user's group
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.groups = function (query, fn) {
+  return this.wpcom.req.get('/me/groups', query, fn);
+};
+
+/**
+ * Get current user's connected applications.
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.connectedApps = function (query, fn) {
+  return this.wpcom.req.get('/me/connected-applications', query, fn);
+};
+
+/**
+ * Get a list of all the keyring connections
+ * associated with the current user
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.keyringConnections = function (query, fn) {
+  return this.wpcom.req.get('/me/keyring-connections', query, fn);
+};
+
+/**
+ * Get a list of publicize connections
+ * that the current user has set up.
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Me.prototype.publicizeConnections = function (query, fn) {
+  return this.wpcom.req.get('/me/publicize-connections', query, fn);
+};
+
+/**
+ * Return a `MeSettings` instance.
+ *
+ * @return {MeSettings} MeSettings instance
+ */
+Me.prototype.settings = function () {
+  return new _meSettings2['default'](this.wpcom);
+};
+
+/**
+ * Return a `MeConnectedApp` instance.
+ *
+ * @param {String} id - app id
+ * @return {ConnectedApp} Me ConnectedApp instance
+ */
+Me.prototype.connectedApp = function (id) {
+  return new _meConnectedApplication2['default'](id, this.wpcom);
+};
+
+/**
+ * Return a `MePublicizeConnection` instance.
+ *
+ * @param {String} id - connection id
+ * @return {MePublicizeConnection} MeSettings instance
+ */
+Me.prototype.publicizeConnection = function (id) {
+  return new _mePublicizeConnection2['default'](id, this.wpcom);
+};
+
+/**
+ * Return a `MeTwoStep` instance.
+ *
+ * @return {MeTwoStep} MeTwoStep instance
+ */
+Me.prototype.twoStep = function () {
+  return new _meTwoStep2['default'](this.wpcom);
+};
+
+/**
+ * Return a `MeKeyringConnection` instance.
+ *
+ * @param {String} id - connection id
+ * @return {MeKeyringConnection} MeKeyringConnection instance
+ */
+Me.prototype.keyringConnection = function (id) {
+  return new _meKeyringConnection2['default'](id, this.wpcom);
+};
+
+/**
+ * Expose `Me` module
+ */
+module.exports = Me;
+},{"./me.connected-application":61,"./me.keyring-connection":63,"./me.publicize-connection":64,"./me.settings":65,"./me.two-step":68,"babel-runtime/helpers/interop-require-default":6}],63:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var root = '/me/keyring-connections/';
+
+var KeyringConnection = (function () {
+
+	/**
+  * `KeyringConnection` constructor.
+  *
+  * @param {String} keyId - the connection ID to take action on.
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function KeyringConnection(keyId, wpcom) {
+		_classCallCheck(this, KeyringConnection);
+
+		if (!(this instanceof KeyringConnection)) {
+			return new KeyringConnection(keyId, wpcom);
+		}
+		this._id = keyId;
+		this.wpcom = wpcom;
+	}
+
+	/**
+ * Expose `KeyringConnection` module
+ */
+
+	/**
+  * Get a single Keyring connection that the current user has setup.
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(KeyringConnection, [{
+		key: 'get',
+		value: function get(query, fn) {
+			return this.wpcom.req.get(root + this._id, query, fn);
+		}
+
+		/**
+   * Delete the Keyring connection (and associated token) with the
+   * provided ID. Also deletes all associated publicize connections.
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'delete',
+		value: function _delete(query, fn) {
+			return this.wpcom.req.del(root + this._id + '/delete', query, fn);
+		}
+	}]);
+
+	return KeyringConnection;
+})();
+
+module.exports = KeyringConnection;
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],64:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var root = '/me/publicize-connections/';
+
+var PublicizeConnection = (function () {
+	/**
+ * `PublicizeConnection` constructor.
+ *
+ * @param {String} connectionId - application identifier
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+
+	function PublicizeConnection(connectionId, wpcom) {
+		_classCallCheck(this, PublicizeConnection);
+
+		if (!(this instanceof PublicizeConnection)) {
+			return new PublicizeConnection(connectionId, wpcom);
+		}
+		this._id = connectionId;
+		this.wpcom = wpcom;
+	}
+
+	/**
+ * Expose `PublicizeConnection` module
+ */
+
+	/**
+  * Get a single publicize connection that the current user has set up.
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(PublicizeConnection, [{
+		key: 'get',
+		value: function get(query, fn) {
+			return this.wpcom.req.get(root + this._id, query, fn);
+		}
+
+		/**
+   * Add a publicize connection belonging to the current user.
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Object} body - body object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'add',
+		value: function add(query, body, fn) {
+			return this.wpcom.req.post(root + 'new', query, body, fn);
+		}
+
+		/**
+   * Update a publicize connection belonging to the current user.
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Object} body - body object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'update',
+		value: function update(query, body, fn) {
+			return this.wpcom.req.put(root + this._id, query, body, fn);
+		}
+
+		/**
+  * Delete the app of the  current user
+  * through of the given connectionId
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+	}, {
+		key: 'delete',
+		value: function _delete(query, fn) {
+			return this.wpcom.req.del(root + this._id + '/delete', query, fn);
+		}
+	}]);
+
+	return PublicizeConnection;
+})();
+
+module.exports = PublicizeConnection;
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],65:[function(require,module,exports){
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+/**
+ * Module dependencies
+ */
+
+var _meSettingsProfileLinks = require('./me.settings.profile-links');
+
+var _meSettingsProfileLinks2 = _interopRequireDefault(_meSettingsProfileLinks);
+
+var _meSettingsPassword = require('./me.settings.password');
+
+var _meSettingsPassword2 = _interopRequireDefault(_meSettingsPassword);
+
+/**
+ * `MeSettings` constructor.
+ *
+ * Use a `WPCOM#Me` instance to create a new `MeSettings` instance.
+ *
+ * *Example:*
+ *    // Require `wpcom-unpublished` library
+ *    var wpcomUnpublished = require( 'wpcom-unpublished' );
+ *
+ *    // Create a `wpcomUnpublished` instance
+ *    var wpcom = wpcomUnpublished();
+ *
+ *    // Create a `MeSettings` instance
+ *    var settings = wpcom.me().settings();
+ *
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function MeSettings(wpcom) {
+  if (!(this instanceof MeSettings)) {
+    return new MeSettings(wpcom);
+  }
+
+  this.wpcom = wpcom;
+}
+
+/**
+ * Get settings for the current user.
+ *
+ * *Example:*
+ *    // Get settings for the current user
+ *    wpcom
+ *    .me()
+ *    .settings()
+ *    .get( function( err, data ) {
+ *      // user settings data object
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+MeSettings.prototype.get = function (query, fn) {
+  return this.wpcom.req.get('/me/settings', query, fn);
+};
+
+/**
+ * Update settings of the current user
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+MeSettings.prototype.update = function (query, body, fn) {
+  return this.wpcom.req.put('/me/settings/', query, body, fn);
+};
+
+/**
+ * Return `MeProfileLinks` instance
+ *
+ * *Example:*
+ *    // Create a MeProfileLinks instance
+ *    var profile_links = wpcom.me().settings().profileLinks();
+ *
+ * @return {MeProfileLinks} MeProfileLinks instance
+ */
+MeSettings.prototype.profileLinks = function () {
+  return new _meSettingsProfileLinks2['default'](this.wpcom);
+};
+
+/**
+ * Return `MeSettingsPassword` instance
+ *
+ * @return {MeSettingsPassword} MeSettingsPassword instance
+ */
+MeSettings.prototype.password = function () {
+  return new _meSettingsPassword2['default'](this.wpcom);
+};
+
+/**
+ * Expose `MeSettings` module
+ */
+module.exports = MeSettings;
+},{"./me.settings.password":66,"./me.settings.profile-links":67,"babel-runtime/helpers/interop-require-default":6}],66:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var root = '/me/settings/password/';
+
+var MeSettingsPassword = (function () {
+
+	/**
+  * `MeSettingsPassword` constructor.
+  *
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function MeSettingsPassword(wpcom) {
+		_classCallCheck(this, MeSettingsPassword);
+
+		if (!(this instanceof MeSettingsPassword)) {
+			return new MeSettingsPassword(wpcom);
+		}
+		this.wpcom = wpcom;
+	}
+
+	/**
+ * Expose `MeSettingsPassword` module
+ */
+
+	/**
+  * Verify strength of a user's new password.
+  *
+  * @param {String} password - the users's potential new password
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(MeSettingsPassword, [{
+		key: 'validate',
+		value: function validate(password, query, fn) {
+			return this.wpcom.req.post(root + 'validate', query, { password: password }, fn);
+		}
+	}]);
+
+	return MeSettingsPassword;
+})();
+
+module.exports = MeSettingsPassword;
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],67:[function(require,module,exports){
+/**
+ * Endpoint root
+ */
+var root = '/me/settings/profile-links';
+
+/**
+ * `ProfileLinks` constructor.
+ *
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function ProfileLinks(wpcom) {
+  if (!(this instanceof ProfileLinks)) {
+    return new ProfileLinks(wpcom);
+  }
+
+  this.wpcom = wpcom;
+}
+
+/**
+ * Get profile links of the current user.
+ *
+ * *Example:*
+ *   // Get profile links of the current user
+ *    wpcom
+ *    .me()
+ *    .settings()
+ *    .profileLinks()
+ *    .get( function( err, data ) {
+ *      // profile links data
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+ProfileLinks.prototype.get = function (query, fn) {
+  return this.wpcom.req.get(root, query, fn);
+};
+
+// Create `mine` alias
+ProfileLinks.prototype.mine = ProfileLinks.prototype.get;
+
+/**
+ * Add a profile link to current user.
+ *
+ * *Example:*
+ *    // Add profile link to current user
+ *    wpcom
+ *    .me()
+ *    .settings()
+ *    .profileLinks()
+ *    .add( {
+ *      title: "WordPress Blog",
+ *      value: "en.blog.wordpress.com"
+ *    }, function( err, data ) {
+ *      // profile has been added
+ *    } );
+ *
+ * @param {Array|Object} links - profile links
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+ProfileLinks.prototype.add = function (links, query, fn) {
+  // query object is optional
+  if ('function' === typeof query) {
+    fn = query;
+    query = {};
+  }
+
+  // links can be Array or an Object
+  if (!(links instanceof Array)) {
+    links = [links];
+  }
+
+  // Set api version 1.2 for this endpoint
+  query.apiVersion = '1.2';
+
+  var path = root + '/new';
+  return this.wpcom.req.post(path, query, { links: links }, fn);
+};
+
+/**
+ * Remove your ProfileLinks from a Post.
+ *
+ * *Example:*
+ *    // Remove profile link from current user
+ *    wpcom
+ *    .me()
+ *    .settings()
+ *    .profileLinks()
+ *    .del( 'example.wordpress.com', function( err, data ) {
+ *      // profile has been deleted
+ *    } );
+ *
+ * @param {String} slug - the URL of the profile link
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+ProfileLinks.prototype.del = function (slug, query, fn) {
+  var path = root + '/' + slug + '/delete';
+  return this.wpcom.req.del(path, query, fn);
+};
+
+// Create `delete` alias
+ProfileLinks.prototype['delete'] = ProfileLinks.prototype.del;
+
+/**
+ * Expose `ProfileLinks` module
+ */
+
+module.exports = ProfileLinks;
+},{}],68:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+/**
+ * Module dependencies
+ */
+
+var _meTwoStepSms = require('./me.two-step.sms');
+
+var _meTwoStepSms2 = _interopRequireDefault(_meTwoStepSms);
+
+var root = '/me/two-step/';
+
+var MeTwoStep = (function () {
+
+	/**
+  * `MeTwoStep` constructor.
+  *
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function MeTwoStep(wpcom) {
+		_classCallCheck(this, MeTwoStep);
+
+		if (!(this instanceof MeTwoStep)) {
+			return new MeTwoStep(wpcom);
+		}
+		this.wpcom = wpcom;
+	}
+
+	/**
+ * Expose `MeTwoStep` module
+ */
+
+	/**
+  * Get information about current user's two factor configuration.
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(MeTwoStep, [{
+		key: 'get',
+		value: function get(query, fn) {
+			return this.wpcom.req.get(root, query, fn);
+		}
+
+		/**
+   * Return a `MeTwoStepSMS` instance.
+   *
+   * @return {MeTwoStepSMS} MeTwoStepSMS instance
+   */
+	}, {
+		key: 'sms',
+		value: function sms() {
+			return new _meTwoStepSms2['default'](this.wpcom);
+		}
+	}]);
+
+	return MeTwoStep;
+})();
+
+module.exports = MeTwoStep;
+},{"./me.two-step.sms":69,"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4,"babel-runtime/helpers/interop-require-default":6}],69:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var root = '/me/two-step/sms/';
+
+var MeTwoStepSMS = (function () {
+
+	/**
+  * `MeTwoStepSMS` constructor.
+  *
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function MeTwoStepSMS(wpcom) {
+		_classCallCheck(this, MeTwoStepSMS);
+
+		if (!(this instanceof MeTwoStepSMS)) {
+			return new MeTwoStepSMS(wpcom);
+		}
+		this.wpcom = wpcom;
+	}
+
+	/**
+ * Expose `MeTwoStepSMS` module
+ */
+
+	/**
+  * Sends a two-step code via SMS to the current user.
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(MeTwoStepSMS, [{
+		key: 'send',
+		value: function send(query, fn) {
+			return this.wpcom.req.post(root + 'new', query, fn);
+		}
+	}]);
+
+	return MeTwoStepSMS;
+})();
+
+module.exports = MeTwoStepSMS;
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],70:[function(require,module,exports){
+module.exports=[
+	{ "name": "categoriesList", "subpath": "categories" },
+	{ "name": "commentsList", "subpath": "comments" },
+	{ "name": "embedsList", "subpath": "embeds" },
+	{ "name": "embedsList", "subpath": "embeds" },
+	{ "name": "domainsList", "subpath": "domains" },
+	{ "name": "followsList", "subpath": "follows" },
+	{ "name": "mediaList", "subpath":  "media" },
+	{ "name": "pluginsList", "subpath":  "plugins" },
+	{ "name": "pageTemplates", "subpath": "page-templates" },
+	{ "name": "postsList", "subpath": "posts" },
+	{ "name": "postTypesList", "subpath": "post-types" },
+	{ "name": "stats", "subpath": "stats" },
+	{ "name": "statsClicks", "subpath": "stats/clicks" },
+	{ "name": "shortcodesList", "subpath": "shortcodes" },
+	{ "name": "statsComments", "subpath": "stats/comments" },
+	{ "name": "statsCommentFollowers", "subpath": "stats/comment-followers" },
+	{ "name": "statsCountryViews", "subpath": "stats/country-views" },
+	{ "name": "statsFollowers", "subpath": "stats/followers" },
+	{ "name": "statsPublicize", "subpath": "stats/publicize" },
+	{ "name": "statsReferrers", "subpath": "stats/referrers" },
+	{ "name": "statsSearchTerms", "subpath": "stats/search-terms" },
+	{ "name": "statsStreak", "subpath": "stats/streak" },
+	{ "name": "statsSummary", "subpath": "stats/summary" },
+	{ "name": "statsTags", "subpath": "stats/tags" },
+	{ "name": "statsTopAuthors", "subpath": "stats/top-authors" },
+	{ "name": "statsTopPosts", "subpath": "stats/top-posts" },
+	{ "name": "statsVideoPlays", "subpath": "stats/video-plays" },
+	{ "name": "statsVisits", "subpath": "stats/visits" },
+	{ "name": "tagsList", "subpath": "tags" },
+	{ "name": "usersList", "subpath": "users" }
+]
+
+},{}],71:[function(require,module,exports){
+module.exports=[
+	{ "name": "likesList", "subpath": "likes" },
+	{ "name": "subscribersList", "subpath": "subscribers" }
+]
+
+},{}],72:[function(require,module,exports){
+/**
+ * Category methods
+ *
+ * @param {String} [slug] - category slug
+ * @param {String} sid - site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Category(slug, sid, wpcom) {
+  if (!sid) {
+    throw new Error('`site id` is not correctly defined');
+  }
+
+  if (!(this instanceof Category)) {
+    return new Category(slug, sid, wpcom);
+  }
+
+  this.wpcom = wpcom;
+  this._sid = sid;
+  this._slug = slug;
+}
+
+/**
+ * Set category `slug`
+ *
+ * @param {String} slug - category slug
+ */
+Category.prototype.slug = function (slug) {
+  this._slug = slug;
+};
+
+/**
+ * Get category
+ *
+ * @param {Object} [query] - query object parameter - query object parameter
+ * @param {Function} fn - callback function - callback
+ * @return {Function} request handler
+ */
+Category.prototype.get = function (query, fn) {
+  var path = '/sites/' + this._sid + '/categories/slug:' + this._slug;
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Add category
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Category.prototype.add = function (query, body, fn) {
+  var path = '/sites/' + this._sid + '/categories/new';
+  return this.wpcom.req.post(path, query, body, fn);
+};
+
+/**
+ * Edit category
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Category.prototype.update = function (query, body, fn) {
+  var path = '/sites/' + this._sid + '/categories/slug:' + this._slug;
+  return this.wpcom.req.put(path, query, body, fn);
+};
+
+/**
+ * Delete category
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Category.prototype['delete'] = Category.prototype.del = function (query, fn) {
+  var path = '/sites/' + this._sid + '/categories/slug:' + this._slug + '/delete';
+  return this.wpcom.req.del(path, query, fn);
+};
+
+/**
+ * Expose `Category` module
+ */
+module.exports = Category;
+},{}],73:[function(require,module,exports){
+/**
+ * Module dependencies.
+ */
+var commentLike = require('./site.comment.like');
+
+/**
+ * Comment methods
+ *
+ * @param {String} [cid] comment id
+ * @param {String} [pid] post id
+ * @param {String} sid site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Comment(cid, pid, sid, wpcom) {
+  if (!sid) {
+    throw new Error('`site id` is not correctly defined');
+  }
+
+  if (!(this instanceof Comment)) {
+    return new Comment(cid, pid, sid, wpcom);
+  }
+
+  this.wpcom = wpcom;
+  this._cid = cid;
+  this._pid = pid;
+  this._sid = sid;
+}
+
+/**
+ * Return a single Comment
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Comment.prototype.get = function (query, fn) {
+  var path = '/sites/' + this._sid + '/comments/' + this._cid;
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Return recent comments for a post
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Comment.prototype.replies = function (query, fn) {
+  var path = '/sites/' + this._sid + '/posts/' + this._pid + '/replies/';
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Create a comment on a post
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {String|Object} body - body parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Comment.prototype.add = function (query, body, fn) {
+  if (undefined === fn) {
+    if (undefined === body) {
+      body = query;
+      query = {};
+    } else if ('function' === typeof body) {
+      fn = body;
+      body = query;
+      query = {};
+    }
+  }
+
+  body = 'string' === typeof body ? { content: body } : body;
+
+  var path = '/sites/' + this._sid + '/posts/' + this._pid + '/replies/new';
+  return this.wpcom.req.post(path, query, body, fn);
+};
+
+/**
+ * Edit a comment
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {String|Object} body - body parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Comment.prototype.update = function (query, body, fn) {
+  if ('function' === typeof body) {
+    fn = body;
+    body = query;
+    query = {};
+  }
+
+  body = 'string' === typeof body ? { content: body } : body;
+
+  var path = '/sites/' + this._sid + '/comments/' + this._cid;
+  return this.wpcom.req.put(path, query, body, fn);
+};
+
+/**
+ * Create a Comment as a reply to another Comment
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {String|Object} body - body parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Comment.prototype.reply = function (query, body, fn) {
+  if ('function' === typeof body) {
+    fn = body;
+    body = query;
+    query = {};
+  }
+
+  body = 'string' === typeof body ? { content: body } : body;
+
+  var path = '/sites/' + this._sid + '/comments/' + this._cid + '/replies/new';
+  return this.wpcom.req.post(path, query, body, fn);
+};
+
+/**
+ * Delete a comment
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Comment.prototype.del = Comment.prototype['delete'] = function (query, fn) {
+  var path = '/sites/' + this._sid + '/comments/' + this._cid + '/delete';
+  return this.wpcom.req.del(path, query, fn);
+};
+
+/**
+ * Create a `commentLike` instance
+ *
+ * @return {CommentLink} CommentLink instance
+ */
+Comment.prototype.like = function () {
+  return commentLike(this._cid, this._sid, this.wpcom);
+};
+
+/**
+ * Get comment likes list
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Comment.prototype.likesList = function (query, fn) {
+  var path = '/sites/' + this._sid + '/comments/' + this._cid + '/likes';
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Expose `Comment` module
+ */
+module.exports = Comment;
+},{"./site.comment.like":74}],74:[function(require,module,exports){
+/**
+ * CommentLike methods
+ *
+ * @param {String} cid comment id
+ * @param {String} sid site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function CommentLike(cid, sid, wpcom) {
+  if (!sid) {
+    throw new Error('`site id` is not correctly defined');
+  }
+
+  if (!cid) {
+    throw new Error('`comment id` is not correctly defined');
+  }
+
+  if (!(this instanceof CommentLike)) {
+    return new CommentLike(cid, sid, wpcom);
+  }
+
+  this.wpcom = wpcom;
+  this._cid = cid;
+  this._sid = sid;
+}
+
+/**
+ * Get your Like status for a Comment
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+CommentLike.prototype.mine = CommentLike.prototype.state = function (query, fn) {
+  var path = '/sites/' + this._sid + '/comments/' + this._cid + '/likes/mine';
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Like a comment
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+CommentLike.prototype.add = function (query, fn) {
+  var path = '/sites/' + this._sid + '/comments/' + this._cid + '/likes/new';
+  return this.wpcom.req.post(path, query, fn);
+};
+
+/**
+ * Remove your Like from a Comment
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+CommentLike.prototype.del = CommentLike.prototype['delete'] = function (query, fn) {
+  var path = '/sites/' + this._sid + '/comments/' + this._cid + '/likes/mine/delete';
+  return this.wpcom.req.del(path, query, fn);
+};
+
+/**
+ * Expose `CommentLike` module
+ */
+module.exports = CommentLike;
+},{}],75:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+/**
+ * Module variables
+ */
+var root = '/sites';
+
+var SiteDomain = (function () {
+	/**
+  * `SiteDomain` constructor.
+  *
+  * @param {Number|String} id - site identifier
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Undefined} undefined
+  */
+
+	function SiteDomain(id, wpcom) {
+		_classCallCheck(this, SiteDomain);
+
+		if (!(this instanceof SiteDomain)) {
+			return new SiteDomain(id, wpcom);
+		}
+		this._sid = id;
+		this.path = root + '/' + this._sid + '/domains';
+		this.wpcom = wpcom;
+	}
+
+	/**
+  * Expose `SiteDomain` module
+  */
+
+	/**
+  * Get the primary domain for a site
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} [fn] - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(SiteDomain, [{
+		key: 'getPrimary',
+		value: function getPrimary(query, fn) {
+			return this.wpcom.req.get(this.path + '/primary', query, fn);
+		}
+
+		/**
+   * Set the primary domain for a site
+   *
+   * @param {String} domain - domain to set
+   * @param {Function} [fn] - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'setPrimary',
+		value: function setPrimary(domain, fn) {
+			return this.wpcom.req.put(this.path + '/primary', {}, { domain: domain }, fn);
+		}
+
+		/**
+   * Get the redirect status for a site
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} [fn] - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'getRedirect',
+		value: function getRedirect(query, fn) {
+			return this.wpcom.req.get(this.path + '/redirect', query, fn);
+		}
+
+		/**
+   * Set the redirect location for a site
+   *
+   * @param {String|Object} location - location to set
+   * @param {Function} [fn] - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'setRedirect',
+		value: function setRedirect(location, fn) {
+			if (typeof location === 'string') {
+				location = { location: location };
+			}
+
+			return this.wpcom.req.put(this.path + '/redirect', {}, location, fn);
+		}
+	}]);
+
+	return SiteDomain;
+})();
+
+exports['default'] = SiteDomain;
+module.exports = exports['default'];
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],76:[function(require,module,exports){
+/**
+ * Follow
+ *
+ * @param {String} site_id - site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Follow(site_id, wpcom) {
+  if (!site_id) {
+    throw new Error('`site id` is not correctly defined');
+  }
+
+  if (!(this instanceof Follow)) {
+    return new Follow(site_id, wpcom);
+  }
+
+  this.wpcom = wpcom;
+  this._sid = site_id;
+}
+
+/**
+ * Get the follow status for current
+ * user on current blog sites
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Follow.prototype.mine = Follow.prototype.state = function (query, fn) {
+  var path = '/sites/' + this._sid + '/follows/mine';
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Follow the site
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Follow.prototype.follow = Follow.prototype.add = function (query, fn) {
+  var path = '/sites/' + this._sid + '/follows/new';
+  return this.wpcom.req.put(path, query, null, fn);
+};
+
+/**
+ * Unfollow the site
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Follow.prototype.unfollow = Follow.prototype.del = function (query, fn) {
+  var path = '/sites/' + this._sid + '/follows/mine/delete';
+  return this.wpcom.req.del(path, query, null, fn);
+};
+
+/**
+ * Expose `Follow` module
+ */
+module.exports = Follow;
+},{}],77:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+/**
+ * Module dependencies.
+ */
+
+var _sitePost = require('./site.post');
+
+var _sitePost2 = _interopRequireDefault(_sitePost);
+
+var _siteCategory = require('./site.category');
+
+var _siteCategory2 = _interopRequireDefault(_siteCategory);
+
+var _siteTag = require('./site.tag');
+
+var _siteTag2 = _interopRequireDefault(_siteTag);
+
+var _siteMedia = require('./site.media');
+
+var _siteMedia2 = _interopRequireDefault(_siteMedia);
+
+var _siteComment = require('./site.comment');
+
+var _siteComment2 = _interopRequireDefault(_siteComment);
+
+var _siteWordads = require('./site.wordads');
+
+var _siteWordads2 = _interopRequireDefault(_siteWordads);
+
+var _siteFollow = require('./site.follow');
+
+var _siteFollow2 = _interopRequireDefault(_siteFollow);
+
+var _sitePlugin = require('./site.plugin');
+
+var _sitePlugin2 = _interopRequireDefault(_sitePlugin);
+
+var _siteDomain = require('./site.domain');
+
+var _siteDomain2 = _interopRequireDefault(_siteDomain);
+
+var _siteSettings = require('./site.settings');
+
+var _siteSettings2 = _interopRequireDefault(_siteSettings);
+
+var _utilRuntimeBuilder = require('./util/runtime-builder');
+
+var _utilRuntimeBuilder2 = _interopRequireDefault(_utilRuntimeBuilder);
+
+var _runtimeSiteGetJson = require('./runtime/site.get.json');
+
+var _runtimeSiteGetJson2 = _interopRequireDefault(_runtimeSiteGetJson);
+
+var _debug = require('debug');
+
+var _debug2 = _interopRequireDefault(_debug);
+
+/**
+ * Module vars
+ */
+var debug = (0, _debug2['default'])('wpcom:site');
+var root = '/sites';
+
+/**
+ * Site class
+ */
+
+var Site = (function () {
+	/**
+  * Create a Site instance
+  *
+  * @param {String} id - site id
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function Site(id, wpcom) {
+		_classCallCheck(this, Site);
+
+		if (!(this instanceof Site)) {
+			return new Site(id, wpcom);
+		}
+
+		this.wpcom = wpcom;
+
+		debug('set %o site id', id);
+		this._id = encodeURIComponent(id);
+		this.path = root + '/' + this._id;
+	}
+
+	// add methods in runtime
+
+	/**
+  * Require site information
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(Site, [{
+		key: 'get',
+		value: function get(query, fn) {
+			return this.wpcom.req.get(this.path, query, fn);
+		}
+
+		/**
+   * Create a `Post` instance
+   *
+   * @param {String} id - post id
+   * @return {Post} Post instance
+   */
+	}, {
+		key: 'post',
+		value: function post(id) {
+			return new _sitePost2['default'](id, this._id, this.wpcom);
+		}
+
+		/**
+   * Add a new blog post
+   *
+   * @param {Object} body - body object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'addPost',
+		value: function addPost(body, fn) {
+			var post = new _sitePost2['default'](null, this._id, this.wpcom);
+			return post.add(body, fn);
+		}
+
+		/**
+   * Delete a blog post
+   *
+   * @param {String} id - post id
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'deletePost',
+		value: function deletePost(id, fn) {
+			var post = new _sitePost2['default'](id, this._id, this.wpcom);
+			return post['delete'](fn);
+		}
+
+		/**
+   * Create a `Media` instance
+   *
+   * @param {String} id - post id
+   * @return {Media} Media instance
+   */
+	}, {
+		key: 'media',
+		value: function media(id) {
+			return new _siteMedia2['default'](id, this._id, this.wpcom);
+		}
+
+		/**
+   * Add a media from a file
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Array|String} files - media files to add
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'addMediaFiles',
+		value: function addMediaFiles(query, files, fn) {
+			var media = new _siteMedia2['default'](null, this._id, this.wpcom);
+			return media.addFiles(query, files, fn);
+		}
+
+		/**
+   * Add a new media from url
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Array|String} files - media files to add
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'addMediaUrls',
+		value: function addMediaUrls(query, files, fn) {
+			var media = new _siteMedia2['default'](null, this._id, this.wpcom);
+			return media.addUrls(query, files, fn);
+		}
+
+		/**
+   * Delete a blog media
+   *
+   * @param {String} id - media id
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'deleteMedia',
+		value: function deleteMedia(id, fn) {
+			var media = new _siteMedia2['default'](id, this._id, this.wpcom);
+			return media.del(fn);
+		}
+
+		/**
+   * Create a `Comment` instance
+   *
+   * @param {String} id - comment id
+   * @return {Comment} Comment instance
+   */
+	}, {
+		key: 'comment',
+		value: function comment(id) {
+			return new _siteComment2['default'](id, null, this._id, this.wpcom);
+		}
+
+		/**
+   * Create a `Follow` instance
+   *
+   * @return {Follow} Follow instance
+   */
+	}, {
+		key: 'follow',
+		value: function follow() {
+			return new _siteFollow2['default'](this._id, this.wpcom);
+		}
+
+		/**
+   * Create a `SitePlugin` instance
+   *
+   * @param {String} id - plugin identifier
+   * @return {SitePlugin} SitePlugin instance
+   */
+	}, {
+		key: 'plugin',
+		value: function plugin(id) {
+			return new _sitePlugin2['default'](id, this._id, this.wpcom);
+		}
+
+		/**
+   * Create a `Category` instance
+   * Set `cat` alias
+   *
+   * @param {String} [slug] - category slug
+   * @return {Category} Category instance
+   */
+	}, {
+		key: 'category',
+		value: function category(slug) {
+			return new _siteCategory2['default'](slug, this._id, this.wpcom);
+		}
+
+		/**
+   * Create a `Tag` instance
+   *
+   * @param {String} [slug] - tag slug
+   * @return {Tag} Tag instance
+   */
+	}, {
+		key: 'tag',
+		value: function tag(slug) {
+			return new _siteTag2['default'](slug, this._id, this.wpcom);
+		}
+
+		/**
+   * Create a `SiteSettings` instance
+   *
+   * @return {SiteSettings} SiteSettings instance
+   */
+	}, {
+		key: 'settings',
+		value: function settings() {
+			return new _siteSettings2['default'](this._id, this.wpcom);
+		}
+
+		/**
+   * Create a `SiteDomain` instance
+   *
+   * @return {SiteDomain} SiteDomain instance
+   */
+	}, {
+		key: 'domain',
+		value: function domain() {
+			return new _siteDomain2['default'](this._id, this.wpcom);
+		}
+
+		/**
+   * Get number of posts in the post type groups by post status
+   *
+   * *Example:*
+   *   // Get number post of pages
+   *    wpcom
+   *    .site( 'my-blog.wordpress.com' )
+   *    .postCounts( 'page', function( err, data ) {
+   *      // `counts` data object
+   *    } );
+   *
+   * @param {String} type - post type
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'postCounts',
+		value: function postCounts(type, query, fn) {
+			if (type === undefined) type = 'post';
+
+			if ('function' === typeof query) {
+				fn = query;
+				query = {};
+			}
+
+			return this.wpcom.req.get(this.path + '/post-counts/' + type, query, fn);
+		}
+
+		/**
+   * Get a rendered shortcode for a site.
+   *
+   * Note: The current user must have publishing access.
+   *
+   * @param {String} url - shortcode url
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'renderShortcode',
+		value: function renderShortcode(url, query, fn) {
+			if ('string' !== typeof url) {
+				throw new TypeError('expected a url String');
+			}
+
+			if ('function' === typeof query) {
+				fn = query;
+				query = {};
+			}
+
+			query = query || {};
+			query.shortcode = url;
+
+			return this.wpcom.req.get(this.path + '/shortcodes/render', query, fn);
+		}
+
+		/**
+   * Get a rendered embed for a site.
+   *
+   * Note: The current user must have publishing access.
+   *
+   * @param {String} url - embed url
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'renderEmbed',
+		value: function renderEmbed(url, query, fn) {
+			if ('string' !== typeof url) {
+				throw new TypeError('expected an embed String');
+			}
+
+			if ('function' === typeof query) {
+				fn = query;
+				query = {};
+			}
+
+			query = query || {};
+			query.embed_url = url;
+
+			return this.wpcom.req.get(this.path + '/embeds/render', query, fn);
+		}
+
+		/**
+   * Mark a referrering domain as spam
+   *
+   * @param {String} domain - domain
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'statsReferrersSpamNew',
+		value: function statsReferrersSpamNew(domain, fn) {
+			var path = this.path + '/stats/referrers/spam/new';
+			return this.wpcom.req.post(path, { domain: domain }, null, fn);
+		}
+
+		/**
+   * Remove referrering domain from spam
+   *
+   * @param {String} domain - domain
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'statsReferrersSpamDelete',
+		value: function statsReferrersSpamDelete(domain, fn) {
+			var path = this.path + '/stats/referrers/spam/delete';
+			return this.wpcom.req.post(path, { domain: domain }, null, fn);
+		}
+
+		/**
+   * Get detailed stats about a VideoPress video
+   *
+   * @param {String} videoId - video id
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'statsVideo',
+		value: function statsVideo(videoId, query, fn) {
+			var path = this.path + '/stats/video/' + videoId;
+
+			if ('function' === typeof query) {
+				fn = query;
+				query = {};
+			}
+
+			return this.wpcom.req.get(path, query, fn);
+		}
+
+		/**
+   * Get detailed stats about a particular post
+   *
+   * @param {String} postId - post id
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'statsPostViews',
+		value: function statsPostViews(postId, query, fn) {
+			var path = this.path + '/stats/post/' + postId;
+
+			if ('function' === typeof query) {
+				fn = query;
+				query = {};
+			}
+
+			return this.wpcom.req.get(path, query, fn);
+		}
+
+		/**
+   * Return a `SiteWordAds` instance.
+   *
+   * *Example:*
+   *    // Create a SiteWordAds instance
+   *
+   *    var wordAds = wpcom
+   *      .site( 'my-blog.wordpress.com' )
+   *      .wordAds();
+   *
+   * @return {SiteWordAds} SiteWordAds instance
+   */
+	}, {
+		key: 'wordAds',
+		value: function wordAds() {
+			return new _siteWordads2['default'](this._id, this.wpcom);
+		}
+	}]);
+
+	return Site;
+})();
+
+(0, _utilRuntimeBuilder2['default'])(Site, _runtimeSiteGetJson2['default'], function (methodParams, ctx) {
+	return '/sites/' + ctx._id + '/' + methodParams.subpath;
+});
+
+exports['default'] = Site;
+module.exports = exports['default'];
+},{"./runtime/site.get.json":70,"./site.category":72,"./site.comment":73,"./site.domain":75,"./site.follow":76,"./site.media":78,"./site.plugin":79,"./site.post":80,"./site.settings":84,"./site.tag":85,"./site.wordads":87,"./util/runtime-builder":92,"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4,"babel-runtime/helpers/interop-require-default":6,"debug":42}],78:[function(require,module,exports){
+/**
+ * Module dependencies.
+ */
+var fs = require('fs');
+var debug = require('debug')('wpcom:media');
+
+/**
+ * Media methods
+ *
+ * @param {String} id - media id
+ * @param {String} sid site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Media(id, sid, wpcom) {
+	if (!(this instanceof Media)) {
+		return new Media(id, sid, wpcom);
+	}
+
+	this.wpcom = wpcom;
+	this._sid = sid;
+	this._id = id;
+
+	if (!this._id) {
+		debug('WARN: media `id` is not defined');
+	}
+}
+
+/**
+ * Get media
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Media.prototype.get = function (query, fn) {
+	var path = '/sites/' + this._sid + '/media/' + this._id;
+	return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Edit media
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Media.prototype.update = function (query, body, fn) {
+	var path = '/sites/' + this._sid + '/media/' + this._id;
+	return this.wpcom.req.put(path, query, body, fn);
+};
+
+/**
+ * Add media file
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {String|Object|Array} files - files to add
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Media.prototype.addFiles = function (query, files, fn) {
+	if (undefined === fn) {
+		if (undefined === files) {
+			files = query;
+			query = {};
+		} else if ('function' === typeof files) {
+			fn = files;
+			files = query;
+			query = {};
+		}
+	}
+
+	var params = {
+		path: '/sites/' + this._sid + '/media/new',
+		formData: []
+	};
+
+	// process formData
+	files = Array.isArray(files) ? files : [files];
+
+	var i = undefined,
+	    f = undefined,
+	    isStream = undefined,
+	    isFile = undefined,
+	    k = undefined,
+	    param = undefined;
+	for (i = 0; i < files.length; i++) {
+		f = files[i];
+		f = 'string' === typeof f ? fs.createReadStream(f) : f;
+
+		isStream = !!f._readableState;
+		isFile = 'undefined' !== typeof File && f instanceof File;
+
+		debug('is stream: %s', isStream);
+		debug('is file: %s', isFile);
+
+		if (!isFile && !isStream) {
+			// process file attributes like as `title`, `description`, ...
+			for (k in f) {
+				debug('add %o => %o', k, f[k]);
+				if ('file' !== k) {
+					param = 'attrs[' + i + '][' + k + ']';
+					params.formData.push([param, f[k]]);
+				}
+			}
+			// set file path
+			f = f.file;
+			f = 'string' === typeof f ? fs.createReadStream(f) : f;
+		}
+
+		params.formData.push(['media[]', f]);
+	}
+
+	return this.wpcom.req.post(params, query, null, fn);
+};
+
+/**
+ * Add media files from URL
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {String|Array|Object} media - files to add
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Media.prototype.addUrls = function (query, media, fn) {
+	if (undefined === fn) {
+		if (undefined === media) {
+			media = query;
+			query = {};
+		} else if ('function' === typeof media) {
+			fn = media;
+			media = query;
+			query = {};
+		}
+	}
+
+	var path = '/sites/' + this._sid + '/media/new';
+	var body = { media_urls: [] };
+
+	// process formData
+	var i = undefined,
+	    m = undefined,
+	    url = undefined,
+	    k = undefined;
+
+	media = Array.isArray(media) ? media : [media];
+	for (i = 0; i < media.length; i++) {
+		m = media[i];
+
+		if ('string' === typeof m) {
+			url = m;
+		} else {
+			if (!body.attrs) {
+				body.attrs = [];
+			}
+
+			// add attributes
+			body.attrs[i] = {};
+			for (k in m) {
+				if ('url' !== k) {
+					body.attrs[i][k] = m[k];
+				}
+			}
+			url = m.url;
+		}
+
+		// push url into [media_url]
+		body.media_urls.push(url);
+	}
+
+	return this.wpcom.req.post(path, query, body, fn);
+};
+
+/**
+ * Delete media
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Media.prototype['delete'] = Media.prototype.del = function (query, fn) {
+	var path = '/sites/' + this._sid + '/media/' + this._id + '/delete';
+	return this.wpcom.req.del(path, query, fn);
+};
+
+/**
+ * Expose `Media` module
+ */
+module.exports = Media;
+},{"debug":42,"fs":38}],79:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+/**
+ * Module variables
+ */
+var root = '/sites';
+
+var SitePlugin = (function () {
+	/**
+  * `SitePlugin` constructor.
+  *
+  * @param {String} [id] - the plugin ID
+  * @param {Number|String} sid - site identifier
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Undefined} undefined
+  */
+
+	function SitePlugin(id, sid, wpcom) {
+		_classCallCheck(this, SitePlugin);
+
+		if (!(this instanceof SitePlugin)) {
+			return new SitePlugin(id, sid, wpcom);
+		}
+
+		this._id = id;
+		this._sid = sid;
+		this.path = root + '/' + this._sid + '/plugins';
+		this.wpcom = wpcom;
+	}
+
+	/**
+  * Expose `SitePlugin` module
+  */
+
+	/**
+  * Get informtion about the plugin
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} [fn] - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(SitePlugin, [{
+		key: 'get',
+		value: function get(query, fn) {
+			return this.wpcom.req.get(this.path + '/' + this._id, query, fn);
+		}
+	}]);
+
+	return SitePlugin;
+})();
+
+exports['default'] = SitePlugin;
+module.exports = exports['default'];
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],80:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var _Promise = require('babel-runtime/core-js/promise')['default'];
+
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+/**
+ * Module dependencies.
+ */
+
+var _sitePostLike = require('./site.post.like');
+
+var _sitePostLike2 = _interopRequireDefault(_sitePostLike);
+
+var _sitePostReblog = require('./site.post.reblog');
+
+var _sitePostReblog2 = _interopRequireDefault(_sitePostReblog);
+
+var _siteComment = require('./site.comment');
+
+var _siteComment2 = _interopRequireDefault(_siteComment);
+
+var _sitePostSubscriber = require('./site.post.subscriber');
+
+var _sitePostSubscriber2 = _interopRequireDefault(_sitePostSubscriber);
+
+var _utilRuntimeBuilder = require('./util/runtime-builder');
+
+var _utilRuntimeBuilder2 = _interopRequireDefault(_utilRuntimeBuilder);
+
+var _runtimeSitePostGetJson = require('./runtime/site.post.get.json');
+
+var _runtimeSitePostGetJson2 = _interopRequireDefault(_runtimeSitePostGetJson);
+
+var _debug = require('debug');
+
+var _debug2 = _interopRequireDefault(_debug);
+
+/**
+ * Module vars
+ */
+var debug = (0, _debug2['default'])('wpcom:post');
+var root = '/sites';
+
+/**
+ * SitePost class
+ */
+
+var SitePost = (function () {
+	/**
+  * SitePost methods
+  *
+  * @param {String} id - post id
+  * @param {String} sid site id
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function SitePost(id, sid, wpcom) {
+		_classCallCheck(this, SitePost);
+
+		if (!(this instanceof SitePost)) {
+			return new SitePost(id, sid, wpcom);
+		}
+
+		this.wpcom = wpcom;
+		this._sid = sid;
+		this.path = root + '/' + this._sid + '/posts';
+
+		// set `id` and/or `slug` properties
+		id = id || {};
+		if ('object' !== typeof id) {
+			this._id = id;
+		} else {
+			this._id = id.id;
+			this._slug = id.slug;
+		}
+	}
+
+	// add methods in runtime
+
+	/**
+  * Set post `id`
+  *
+  * @param {String} id - site id
+  */
+
+	_createClass(SitePost, [{
+		key: 'id',
+		value: function id(_id) {
+			this._id = _id;
+		}
+
+		/**
+   * Set post `slug`
+   *
+   * @param {String} slug - site slug
+   */
+	}, {
+		key: 'slug',
+		value: function slug(_slug) {
+			this._slug = _slug;
+		}
+
+		/**
+   * Get post url path
+   *
+   * @return {String} post path
+   */
+
+	}, {
+		key: 'getPostPath',
+		value: function getPostPath() {
+			return this.path + '/' + this._id;
+		}
+
+		/**
+   * Get post
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'get',
+		value: function get(query, fn) {
+			if (!this._id && this._slug) {
+				return this.getBySlug(query, fn);
+			}
+
+			return this.wpcom.req.get(this.getPostPath(), query, fn);
+		}
+
+		/**
+   * Get post by slug
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'getBySlug',
+		value: function getBySlug(query, fn) {
+			return this.wpcom.req.get(this.path + '/slug:' + this._slug, query, fn);
+		}
+
+		/**
+   * Add post
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Object} body - body object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'add',
+		value: function add(query, body, fn) {
+			var _this = this;
+
+			if (undefined === fn) {
+				if (undefined === body) {
+					body = query;
+					query = {};
+				} else if ('function' === typeof body) {
+					fn = body;
+					body = query;
+					query = {};
+				}
+			}
+
+			return this.wpcom.req.post(this.path + '/new', query, body).then(function (data) {
+				// update POST object
+				_this._id = data.ID;
+				debug('Set post _id: %s', _this._id);
+
+				_this._slug = data.slug;
+				debug('Set post _slug: %s', _this._slug);
+
+				if ('function' === typeof fn) {
+					fn(null, data);
+				} else {
+					return _Promise.resolve(data);
+				}
+			})['catch'](function (err) {
+				if ('function' === typeof fn) {
+					fn(err);
+				} else {
+					return _Promise.reject(err);
+				}
+			});
+		}
+
+		/**
+   * Edit post
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Object} body - body object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'update',
+		value: function update(query, body, fn) {
+			return this.wpcom.req.put(this.getPostPath(), query, body, fn);
+		}
+
+		/**
+   * Delete post
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Promise} Promise
+   */
+	}, {
+		key: 'delete',
+		value: function _delete(query, fn) {
+			var path = this.getPostPath() + '/delete';
+			return this.wpcom.req.del(path, query, fn);
+		}
+
+		/**
+   * Del post, alias of Delete
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Promise} Promise
+   */
+	}, {
+		key: 'del',
+		value: function del(query, fn) {
+			return this['delete'](query, fn);
+		}
+
+		/**
+   * Restore post
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'restore',
+		value: function restore(query, fn) {
+			return this.wpcom.req.put(this.getPostPath() + '/restore', query, null, fn);
+		}
+
+		/**
+   * Search within a site for related posts
+   *
+   * @param {Object} body - body object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'related',
+		value: function related(body, fn) {
+			return this.wpcom.req.put(this.getPostPath() + '/related', body, null, fn);
+		}
+
+		/**
+   * Create a `Comment` instance
+   *
+   * @param {String} [cid] - comment id
+   * @return {Comment} Comment instance
+   */
+	}, {
+		key: 'comment',
+		value: function comment(cid) {
+			return new _siteComment2['default'](cid, this._id, this._sid, this.wpcom);
+		}
+
+		/**
+   * Return recent comments
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'comments',
+		value: function comments(query, fn) {
+			var comment = new _siteComment2['default'](null, this._id, this._sid, this.wpcom);
+			return comment.replies(query, fn);
+		}
+
+		/**
+   * Create a `Like` instance
+   *
+   * @return {Like} Like instance
+   */
+	}, {
+		key: 'like',
+		value: function like() {
+			return new _sitePostLike2['default'](this._id, this._sid, this.wpcom);
+		}
+
+		/**
+   * Create a `Reblog` instance
+   *
+   * @return {Reblog} Reblog instance
+   */
+	}, {
+		key: 'reblog',
+		value: function reblog() {
+			return new _sitePostReblog2['default'](this._id, this._sid, this.wpcom);
+		}
+
+		/**
+   * Return a `Subscriber` instance.
+   *
+   * *Example:*
+   *    // Create a Subscriber instance of a post
+   *    var post = wpcom.site( 'en.blog.wordpress.com' ).post( 1234 );
+   *    var subs = post.subscriber();
+   *
+   * @return {Subscriber} Subscriber instance
+   */
+	}, {
+		key: 'subscriber',
+		value: function subscriber() {
+			return new _sitePostSubscriber2['default'](this._id, this._sid, this.wpcom);
+		}
+	}]);
+
+	return SitePost;
+})();
+
+(0, _utilRuntimeBuilder2['default'])(SitePost, _runtimeSitePostGetJson2['default'], function (item, ctx) {
+	return '/sites/' + ctx._sid + '/posts/' + ctx._id + '/' + item.subpath;
+});
+
+exports['default'] = SitePost;
+module.exports = exports['default'];
+},{"./runtime/site.post.get.json":71,"./site.comment":73,"./site.post.like":81,"./site.post.reblog":82,"./site.post.subscriber":83,"./util/runtime-builder":92,"babel-runtime/core-js/promise":2,"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4,"babel-runtime/helpers/interop-require-default":6,"debug":42}],81:[function(require,module,exports){
+/**
+ * Like methods
+ *
+ * @param {String} pid - post id
+ * @param {String} sid - site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Like(pid, sid, wpcom) {
+  if (!sid) {
+    throw new Error('`site id` is not correctly defined');
+  }
+
+  if (!pid) {
+    throw new Error('`post id` is not correctly defined');
+  }
+
+  if (!(this instanceof Like)) {
+    return new Like(pid, sid, wpcom);
+  }
+
+  this.wpcom = wpcom;
+  this._pid = pid;
+  this._sid = sid;
+}
+
+/**
+ * Get your Like status for a Post
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ */
+Like.prototype.mine = Like.prototype.state = function (query, fn) {
+  var path = '/sites/' + this._sid + '/posts/' + this._pid + '/likes/mine';
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Like a post
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Like.prototype.add = function (query, fn) {
+  var path = '/sites/' + this._sid + '/posts/' + this._pid + '/likes/new';
+  return this.wpcom.req.put(path, query, null, fn);
+};
+
+/**
+ * Remove your Like from a Post
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ */
+Like.prototype.del = Like.prototype['delete'] = function (query, fn) {
+  var path = '/sites/' + this._sid + '/posts/' + this._pid + '/likes/mine/delete';
+  return this.wpcom.req.del(path, query, fn);
+};
+
+/**
+ * Expose `Like` module
+ */
+module.exports = Like;
+},{}],82:[function(require,module,exports){
+/**
+ * Reblog methods
+ *
+ * @param {String} pid post id
+ * @param {String} sid site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Reblog(pid, sid, wpcom) {
+	if (!sid) {
+		throw new Error('`site id` is not correctly defined');
+	}
+
+	if (!pid) {
+		throw new Error('`post id` is not correctly defined');
+	}
+
+	if (!(this instanceof Reblog)) {
+		return new Reblog(pid, sid, wpcom);
+	}
+
+	this.wpcom = wpcom;
+	this._pid = pid;
+	this._sid = sid;
+}
+
+/**
+ * Get your reblog status for a Post
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Reblog.prototype.mine = Reblog.prototype.state = function (query, fn) {
+	var path = '/sites/' + this._sid + '/posts/' + this._pid + '/reblogs/mine';
+	return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Reblog a post
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Reblog.prototype.add = function (query, body, fn) {
+	if ('function' === typeof body) {
+		fn = body;
+		body = query;
+		query = {};
+	}
+
+	if (body && !body.destination_site_id) {
+		return fn(new Error('destination_site_id is not defined'));
+	}
+
+	var path = '/sites/' + this._sid + '/posts/' + this._pid + '/reblogs/new';
+	return this.wpcom.req.put(path, query, body, fn);
+};
+
+/**
+ * Reblog a post to
+ * It's almost an alias of Reblogs#add
+ *
+ * @param {Number|String} dest site id destination
+ * @param {String} [note] - post reblog note
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Reblog.prototype.to = function (dest, note, fn) {
+	if (undefined === fn) {
+		if (undefined === note) {
+			note = null;
+		} else if ('function' === typeof note) {
+			fn = note;
+			note = null;
+		}
+	}
+
+	return this.add({ note: note, destination_site_id: dest }, fn);
+};
+
+/**
+ * Expose `Reblog` module
+ */
+module.exports = Reblog;
+},{}],83:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var SitePostSubscriber = (function () {
+	/**
+  * `SitePostSubscriber` constructor.
+  *
+  * @param {String} id - post identifier
+  * @param {String} sid - site identifier
+  * @param {WPCOM} wpcom - wpcom instance
+  * @return {Null} null
+  */
+
+	function SitePostSubscriber(id, sid, wpcom) {
+		_classCallCheck(this, SitePostSubscriber);
+
+		if (!sid) {
+			throw new Error('`side id` is not correctly defined');
+		}
+
+		if (!id) {
+			throw new Error('`post id` is not correctly defined');
+		}
+
+		if (!(this instanceof SitePostSubscriber)) {
+			return new SitePostSubscriber(id, sid, wpcom);
+		}
+
+		this.wpcom = wpcom;
+		this._id = id;
+		this._sid = sid;
+		this.path = '/sites/' + this._sid + '/posts/' + this._id + '/subscribers';
+	}
+
+	// method alias
+
+	/**
+  * Get subscriber status for the current user for the Post.
+  *
+  *
+  * *Example:*
+  *    Get subscriber status for the current user for the Post
+  *    wpcom
+  *    .site( 'en.blog.wordpress.com' )
+  *    .post( 1234 )
+  *    .subscriber()
+  *    .mine( function( err, data ) {
+  *      // subscription data
+  *    } );
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Promise} Promise
+  */
+
+	_createClass(SitePostSubscriber, [{
+		key: 'mine',
+		value: function mine(query, fn) {
+			return this.wpcom.req.get(this.path + '/mine', query, fn);
+		}
+
+		/**
+   * Subscribe the current user to the post.
+   *
+   * *Example:*
+   *    // Subscribe the current user to the post
+   *    wpcom
+   *    .site( 'en.blog.wordpress.com' )
+   *    .post( 1234 )
+   *    .subscriber()
+   *    .add( function( err, data ) {
+   *      // current user has been subscribed to post
+   *    } );
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Promise} Promise
+   */
+	}, {
+		key: 'add',
+		value: function add(query, fn) {
+			return this.wpcom.req.put(this.path + '/new', query, null, fn);
+		}
+
+		/**
+   * Unsubscribe current user to the post
+   *
+   * *Example:*
+   *    // Unsubscribe current user to the post
+   *    wpcom
+   *    .site( 'en.blog.wordpress.com' )
+   *    .post( 1234 )
+   *    .subscriber()
+   *    .del( function( err, data ) {
+   *      // current user has been unsubscribed to post
+   *    } );
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Function} fn - callback function
+   * @return {Promise} Promise
+   */
+	}, {
+		key: 'del',
+		value: function del(query, fn) {
+			return this.wpcom.req.del(this.path + '/mine/delete', query, fn);
+		}
+	}]);
+
+	return SitePostSubscriber;
+})();
+
+SitePostSubscriber.prototype.state = SitePostSubscriber.prototype.mine;
+SitePostSubscriber.prototype['delete'] = SitePostSubscriber.prototype.del;
+
+exports['default'] = SitePostSubscriber;
+module.exports = exports['default'];
+},{"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4}],84:[function(require,module,exports){
+var _createClass = require('babel-runtime/helpers/create-class')['default'];
+
+var _classCallCheck = require('babel-runtime/helpers/class-call-check')['default'];
+
+var _defineProperty = require('babel-runtime/helpers/define-property')['default'];
+
+var _Promise = require('babel-runtime/core-js/promise')['default'];
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+/**
+ * SiteSettings methods
+ *
+ * @param {String} sid - site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+
+var SiteSettings = (function () {
+	function SiteSettings(sid, wpcom) {
+		_classCallCheck(this, SiteSettings);
+
+		if (!sid) {
+			throw new Error('`site id` is not correctly defined');
+		}
+
+		if (!(this instanceof SiteSettings)) {
+			return new SiteSettings(sid, wpcom);
+		}
+
+		this.wpcom = wpcom;
+		this._sid = sid;
+		this.path = '/sites/' + this._sid + '/settings';
+	}
+
+	/**
+  * Get site-settings
+  *
+  * @param {Object} [query] - query object parameter
+  * @param {Function} fn - callback function
+  * @return {Function} request handler
+  */
+
+	_createClass(SiteSettings, [{
+		key: 'get',
+		value: function get(query, fn) {
+			return this.wpcom.req.get(this.path, query, fn);
+		}
+
+		/**
+   * Get site-settings single option
+   *
+   * @param {String} option - option to ask
+   * @param {Function} [fn] - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'getOption',
+		value: function getOption(option) {
+			var _this = this;
+
+			var fn = arguments.length <= 1 || arguments[1] === undefined ? function () {} : arguments[1];
+
+			var query = { fields: 'settings' };
+			return new _Promise(function (resolve, reject) {
+				_this.wpcom.req.get(_this.path, query, function (err, data) {
+					if (err) {
+						fn(err);
+						return reject(err);
+					}
+
+					if (!data) {
+						fn();
+						return resolve();
+					}
+
+					var settings = data.settings;
+
+					if (settings && typeof settings[option] !== 'undefined') {
+						fn(null, settings[option]);
+						return resolve(settings[option]);
+					}
+
+					fn(null, data);
+					return resolve(data);
+				});
+			});
+		}
+
+		/**
+   * Update site-settings
+   *
+   * @param {Object} [query] - query object parameter
+   * @param {Object} body - body object parameter
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'update',
+		value: function update(query, body, fn) {
+			return this.wpcom.req.put(this.path, query, body, fn);
+		}
+
+		/**
+   * Set site-settings single option
+   *
+   * @param {String} option - option to set
+   * @param {*} value - value to assing to the given option
+   * @param {Function} fn - callback function
+   * @return {Function} request handler
+   */
+	}, {
+		key: 'setOption',
+		value: function setOption(option, value, fn) {
+			return this.wpcom.req.put(this.path, {}, _defineProperty({}, option, value), fn);
+		}
+	}]);
+
+	return SiteSettings;
+})();
+
+exports['default'] = SiteSettings;
+module.exports = exports['default'];
+},{"babel-runtime/core-js/promise":2,"babel-runtime/helpers/class-call-check":3,"babel-runtime/helpers/create-class":4,"babel-runtime/helpers/define-property":5}],85:[function(require,module,exports){
+/**
+ * Tag methods
+ *
+ * @param {String} [slug] - tag slug
+ * @param {String} sid - site id
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Tag(slug, sid, wpcom) {
+  if (!sid) {
+    throw new Error('`site id` is not correctly defined');
+  }
+
+  if (!(this instanceof Tag)) {
+    return new Tag(slug, sid, wpcom);
+  }
+
+  this.wpcom = wpcom;
+  this._sid = sid;
+  this._slug = slug;
+}
+
+/**
+ * Set tag `slug`
+ *
+ * @param {String} slug - tag slug
+ */
+Tag.prototype.slug = function (slug) {
+  this._slug = slug;
+};
+
+/**
+ * Get tag
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Tag.prototype.get = function (query, fn) {
+  var path = '/sites/' + this._sid + '/tags/slug:' + this._slug;
+  return this.wpcom.req.get(path, query, fn);
+};
+
+/**
+ * Add tag
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Tag.prototype.add = function (query, body, fn) {
+  var path = '/sites/' + this._sid + '/tags/new';
+  return this.wpcom.req.post(path, query, body, fn);
+};
+
+/**
+ * Edit tag
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Tag.prototype.update = function (query, body, fn) {
+  var path = '/sites/' + this._sid + '/tags/slug:' + this._slug;
+  return this.wpcom.req.put(path, query, body, fn);
+};
+
+/**
+ * Delete tag
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Tag.prototype['delete'] = Tag.prototype.del = function (query, fn) {
+  var path = '/sites/' + this._sid + '/tags/slug:' + this._slug + '/delete';
+  return this.wpcom.req.del(path, query, fn);
+};
+
+/**
+ * Expose `Tag` module
+ */
+module.exports = Tag;
+},{}],86:[function(require,module,exports){
+/**
+ * `SiteWordAdsEarnings` constructor.
+ *
+ * *Example:*
+ *    // Require `wpcom-unpublished` library
+ *    import wpcomUnpublished from 'wpcom-unpublished';
+ *
+ *    // Create a `wpcomUnpublished` instance
+ *    var wpcom = wpcomUnpublished();
+ *
+ *    // Create a `SiteWordAdsEarnings` instance
+ *    var wordAds = wpcom
+ *      .site( 'my-blog.wordpress.com' )
+ *      .wordAds()
+ *      .earnings();
+ *
+ *
+ * @param {String} sid - site identifier
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function SiteWordAdsEarnings(sid, wpcom) {
+  if (!(this instanceof SiteWordAdsEarnings)) {
+    return new SiteWordAdsEarnings(sid, wpcom);
+  }
+
+  this._sid = sid;
+  this.wpcom = wpcom;
+}
+
+/**
+ * Get detailed WordAds earnings information about the site.
+ *
+ * *Example:*
+ *    // Get site earnings information
+ *    wpcom
+ *    .site( 'my-blog.wordpress.com' )
+ *    .wordAds()
+ *    .earnings()
+ *    .get( function( err, data ) {
+ *      // `earnings` information object
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+SiteWordAdsEarnings.prototype.get = function (query, fn) {
+  return this.wpcom.req.get('/sites/' + this._sid + '/wordads/earnings', query, fn);
+};
+
+/**
+ * Expose `SiteWordAdsEarnings` module
+ */
+
+module.exports = SiteWordAdsEarnings;
+},{}],87:[function(require,module,exports){
+var _interopRequireDefault = require('babel-runtime/helpers/interop-require-default')['default'];
+
+/**
+ * Module dependencies.
+ */
+
+var _siteWordadsSettings = require('./site.wordads.settings');
+
+var _siteWordadsSettings2 = _interopRequireDefault(_siteWordadsSettings);
+
+var _siteWordadsEarnings = require('./site.wordads.earnings');
+
+var _siteWordadsEarnings2 = _interopRequireDefault(_siteWordadsEarnings);
+
+var _siteWordadsTos = require('./site.wordads.tos');
+
+var _siteWordadsTos2 = _interopRequireDefault(_siteWordadsTos);
+
+/**
+ * `SiteWordAds` constructor.
+ *
+ * Use a `WPCOM#Me` instance to create a new `SiteWordAds` instance.
+ *
+ * *Example:*
+ *    // Require `wpcom-unpublished` library
+ *    import wpcomUnpublished from 'wpcom-unpublished';
+ *
+ *    // Create a `wpcomUnpublished` instance
+ *    var wpcom = wpcomUnpublished();
+ *
+ *    // Create a `SiteWordAds` instance
+ *    var wordAds = wpcom
+ *      .site( 'my-blog.wordpress.com' )
+ *      .wordAds();
+ *
+ * @param {String} sid - site identifier
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function SiteWordAds(sid, wpcom) {
+  if (!(this instanceof SiteWordAds)) {
+    return new SiteWordAds(sid, wpcom);
+  }
+
+  this._sid = sid;
+  this.wpcom = wpcom;
+}
+
+/**
+ * Return a `SiteWordAdsSettings` instance.
+ *
+ * *Example:*
+ *    // Create a SiteWordAdsSettings instance
+ *
+ *    var wordAds = wpcom
+ *      .site( 'my-blog.wordpress.com' )
+ *      .wordAds()
+ *      .settings();
+ *
+ * @return {SiteWordAdsSettings} site WordAds settings instance
+ */
+SiteWordAds.prototype.settings = function () {
+  return new _siteWordadsSettings2['default'](this._sid, this.wpcom);
+};
+
+/**
+ * Return a `SiteWordAdsEarnings` instance.
+ *
+ * *Example:*
+ *    // Create a SiteWordAdsEarnings instance
+ *
+ *    var wordAds = wpcom
+ *      .site( 'my-blog.wordpress.com' )
+ *      .wordAds()
+ *      .earnings();
+ *
+ * @return {SiteWordAdsEarnings} site WordAds earnings instance
+ */
+SiteWordAds.prototype.earnings = function () {
+  return new _siteWordadsEarnings2['default'](this._sid, this.wpcom);
+};
+
+/**
+ * Return a `SiteWordAdsTOS` instance.
+ *
+ * *Example:*
+ *    // Create a SiteWordAdsTOS instance
+ *
+ *    var wordAds = wpcom
+ *      .site( 'my-blog.wordpress.com' )
+ *      .wordAds()
+ *      .tos();
+ *
+ * Return  SiteWordAdsTOS object for the site.
+ *
+ * @return {SiteWordAdsTOS} site wordAds TOS instance
+ */
+SiteWordAds.prototype.tos = function () {
+  return new _siteWordadsTos2['default'](this._sid, this.wpcom);
+};
+
+/**
+ * Expose `SiteWordAds` module
+ */
+module.exports = SiteWordAds;
+},{"./site.wordads.earnings":86,"./site.wordads.settings":88,"./site.wordads.tos":89,"babel-runtime/helpers/interop-require-default":6}],88:[function(require,module,exports){
+/**
+ * `SiteWordAdsSettings` constructor.
+ *
+ * *Example:*
+ *    // Require `wpcom-unpublished` library
+ *    import wpcomUnpublished from 'wpcom-unpublished';
+ *
+ *    // Create a `wpcomUnpublished` instance
+ *    var wpcom = wpcomUnpublished();
+ *
+ *    // Create a `SiteWordAdsSettings` instance
+ *    var wordAds = wpcom
+ *      .site( 'my-blog.wordpress.com' )
+ *      .wordAds()
+ *      .settings();
+ *
+ *
+ * @param {String} sid - site identifier
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function SiteWordAdsSettings(sid, wpcom) {
+  if (!(this instanceof SiteWordAdsSettings)) {
+    return new SiteWordAdsSettings(sid, wpcom);
+  }
+
+  this._sid = sid;
+  this.wpcom = wpcom;
+}
+
+/**
+ * Get detailed WordAds settings information about the site.
+ *
+ * *Example:*
+ *    // Get site settings information
+ *    wpcom
+ *    .site( 'my-blog.wordpress.com' )
+ *    .wordAds()
+ *    .settings()
+ *    .get( function( err, data ) {
+ *      // `settings` information object
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+SiteWordAdsSettings.prototype.get = function (query, fn) {
+  return this.wpcom.req.get('/sites/' + this._sid + '/wordads/settings', query, fn);
+};
+
+/**
+ * Update WordAds settings for the site.
+ *
+ * *Example:*
+ *    var settings = {}; // your settings here
+ *
+ *    // Get site settings information
+ *    wpcom
+ *    .site( 'my-blog.wordpress.com' )
+ *    .wordAds()
+ *    .settings()
+ *    .update( settings, function( err, data ) {
+ *      // data settings information object
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+SiteWordAdsSettings.prototype.update = function (query, body, fn) {
+  var path = '/sites/' + this._sid + '/wordads/settings';
+  return this.wpcom.req.post(path, query, body, fn);
+};
+
+/**
+ * Expose `SiteWordAdsSettings` module
+ */
+module.exports = SiteWordAdsSettings;
+},{}],89:[function(require,module,exports){
+/**
+ * `SiteWordAdsTOS` constructor.
+ *
+ * *Example:*
+ *    // Require `wpcom-unpublished` library
+ *    import wpcomUnpublished from 'wpcom-unpublished';
+ *
+ *    // Create a `wpcomUnpublished` instance
+ *    var wpcom = wpcomUnpublished();
+ *
+ *    // Create a `SiteWordAdsTOS` instance
+ *    var wordAds = wpcom
+ *      .site( 'my-blog.wordpress.com' )
+ *      .wordAds()
+ *      .tos();
+ *
+ * @param {String} sid - site identifier
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function SiteWordAdsTOS(sid, wpcom) {
+  if (!(this instanceof SiteWordAdsTOS)) {
+    return new SiteWordAdsTOS(sid, wpcom);
+  }
+
+  this._sid = sid;
+  this.wpcom = wpcom;
+}
+
+/**
+ * GET site's WordAds TOS
+ *
+ * *Example:*
+ *    // Get site TOS information
+ *    wpcom
+ *    .site( 'my-blog.wordpress.com' )
+ *    .wordAds()
+ *    .tos()
+ *    .get( function( err, data ) {
+ *      // `settings` information object
+ *    } );
+
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+SiteWordAdsTOS.prototype.get = function (query, fn) {
+  return this.wpcom.req.get('/sites/' + this._sid + '/wordads/tos', query, fn);
+};
+
+/**
+ * UPDATE site's WordAds TOS
+ *
+ * *Example:*
+ *    // Update TOS
+ *    wpcom
+ *    .site( 'my-blog.wordpress.com' )
+ *    .wordAds()
+ *    .tos()
+ *    .update( { tos: 'signed' }, function( err, data ) {
+ *      // data settings information object
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+SiteWordAdsTOS.prototype.update = function (query, body, fn) {
+  var path = '/sites/' + this._sid + '/wordads/tos';
+  return this.wpcom.req.post(path, query, body, fn);
+};
+
+/**
+ * SIGN site's WordAds TOS
+ *
+ * *Example:*
+ *    // Sign TOS
+ *    wpcom
+ *    .site( 'my-blog.wordpress.com' )
+ *    .wordAds()
+ *    .tos()
+ *    .sign( function( err, data ) {
+ *      // data settings information object
+ *    } );
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+SiteWordAdsTOS.prototype.sign = function (query, fn) {
+  var path = '/sites/' + this._sid + '/wordads/tos';
+  return this.wpcom.req.post(path, query, { tos: 'signed' }, fn);
+};
+
+/**
+ * Expose `SiteWordAdsTOS` module
+ */
+module.exports = SiteWordAdsTOS;
+},{}],90:[function(require,module,exports){
+/**
+ * Create a `Users` instance
+ *
+ * @param {WPCOM} wpcom - wpcom instance
+ * @return {Null} null
+ */
+function Users(wpcom) {
+  if (!(this instanceof Users)) {
+    return new Users(wpcom);
+  }
+
+  this.wpcom = wpcom;
+}
+
+/**
+ * A list of @mention suggestions for the current user
+ *
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Users.prototype.suggest = function (query, fn) {
+  return this.wpcom.req.get('/users/suggest', query, fn);
+};
+
+/**
+ * Expose `Users` module
+ */
+module.exports = Users;
+},{}],91:[function(require,module,exports){
+/**
+ * Module dependencies.
+ */
+var sendRequest = require('./send-request');
+
+/**
+ * Expose `Request` module
+ * @param {WPCOM} wpcom - wpcom instance
+ */
+function Req(wpcom) {
+  this.wpcom = wpcom;
+}
+
+/**
+ * Request methods
+ *
+ * @param {Object|String} params - params object
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Req.prototype.get = function (params, query, fn) {
+  // `query` is optional
+  if ('function' === typeof query) {
+    fn = query;
+    query = {};
+  }
+
+  return sendRequest.call(this.wpcom, params, query, null, fn);
+};
+
+/**
+ * Make `update` request
+ *
+ * @param {Object|String} params
+ * @param {Object} [query] - query object parameter
+ * @param {Object} body - body object parameter
+ * @param {Function} fn - callback function
+ */
+Req.prototype.post = Req.prototype.put = function (params, query, body, fn) {
+  if (undefined === fn) {
+    if (undefined === body) {
+      body = query;
+      query = {};
+    } else if ('function' === typeof body) {
+      fn = body;
+      body = query;
+      query = {};
+    }
+  }
+
+  // params can be a string
+  params = 'string' === typeof params ? { path: params } : params;
+
+  // request method
+  params.method = 'post';
+
+  return sendRequest.call(this.wpcom, params, query, body, fn);
+};
+
+/**
+ * Make a `delete` request
+ *
+ * @param {Object|String} params - params object
+ * @param {Object} [query] - query object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+Req.prototype.del = function (params, query, fn) {
+  if ('function' === typeof query) {
+    fn = query;
+    query = {};
+  }
+
+  return this.post(params, query, null, fn);
+};
+
+/**
+ * Expose module
+ */
+module.exports = Req;
+},{"./send-request":93}],92:[function(require,module,exports){
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+/**
+ * Build a generic method
+ *
+ * @param {Object} methodParams - method methodParams
+ * @param {Function} buildPath - function called to build method path
+ * @return {String} method path
+ */
+var methodBuilder = function methodBuilder(methodParams, buildPath) {
+  return function (query, fn) {
+    var path = buildPath(methodParams, this);
+    return this.wpcom.req.get(path, query, fn);
+  };
+};
+
+/**
+ * Add methods to the given Class in the
+ * runtime process.
+ *
+ * @param {*} Class - class to extend
+ * @param {Array} list - methods list
+ * @param {Function} buildPath - function to build the method endpoint path
+ */
+
+exports['default'] = function (Class, list, buildPath) {
+  list.forEach(function (methodParams) {
+    methodParams = 'object' === typeof methodParams ? methodParams : { name: methodParams };
+
+    Class.prototype[methodParams.name] = methodBuilder(methodParams, buildPath);
+  });
+};
+
+;
+module.exports = exports['default'];
+},{}],93:[function(require,module,exports){
+var _Promise = require('babel-runtime/core-js/promise')['default'];
+
+/**
+ * Module dependencies
+ */
+var qs = require('qs');
+var debug = require('debug')('wpcom:send-request');
+var debug_res = require('debug')('wpcom:send-request:res');
+
+/**
+ * Request to WordPress REST API
+ *
+ * @param {String|Object} params - params object
+ * @param {Object} [query] - query object parameter
+ * @param {Object} [body] - body object parameter
+ * @param {Function} fn - callback function
+ * @return {Function} request handler
+ */
+module.exports = function (params, query, body, fn) {
+	var _this = this;
+
+	// `params` can be just the path ( String )
+	params = 'string' === typeof params ? { path: params } : params;
+
+	debug('sendRequest(%o )', params.path);
+
+	// set `method` request param
+	params.method = (params.method || 'get').toUpperCase();
+
+	// `query` is optional
+	if ('function' === typeof query) {
+		fn = query;
+		query = {};
+	}
+
+	// `body` is optional
+	if ('function' === typeof body) {
+		fn = body;
+		body = null;
+	}
+
+	// query could be `null`
+	query = query || {};
+
+	// Handle special query parameters
+	// - `apiVersion`
+	if (query.apiVersion) {
+		params.apiVersion = query.apiVersion;
+		debug('apiVersion: %o', params.apiVersion);
+		delete query.apiVersion;
+	} else {
+		params.apiVersion = this.apiVersion;
+	}
+
+	// - `apiNamespace`
+	if (query.apiNamespace) {
+		params.apiNamespace = query.apiNamespace;
+		debug('apiNamespace: %o', params.apiNamespace);
+		delete query.apiNamespace;
+	}
+
+	// - `proxyOrigin`
+	if (query.proxyOrigin) {
+		params.proxyOrigin = query.proxyOrigin;
+		debug('proxyOrigin: %o', params.proxyOrigin);
+		delete query.proxyOrigin;
+	}
+
+	// Stringify query object before to send
+	query = qs.stringify(query, { arrayFormat: 'brackets' });
+
+	// pass `query` and/or `body` to request params
+	params.query = query;
+
+	if (body) {
+		params.body = body;
+	}
+	debug('params: %o', params);
+
+	// if callback is provided, behave traditionally
+	if ('function' === typeof fn) {
+		// request method
+		return this.request(params, function (err, res) {
+			debug_res(res);
+			fn(err, res);
+		});
+	}
+
+	// but if not, return a Promise
+	return new _Promise(function (resolve, reject) {
+		_this.request(params, function (err, res) {
+			debug_res(res);
+			err ? reject(err) : resolve(res);
+		});
+	});
+};
+},{"babel-runtime/core-js/promise":2,"debug":42,"qs":46}],94:[function(require,module,exports){
 'use strict';
 
 var _index = require('./slide/index.js');
@@ -9859,7 +17689,7 @@ var _index6 = _interopRequireDefault(_index5);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-},{"./main-menu/index.js":4,"./notices/index.js":5,"./slide/index.js":6}],3:[function(require,module,exports){
+},{"./main-menu/index.js":96,"./notices/index.js":97,"./slide/index.js":98}],95:[function(require,module,exports){
 "use strict";
 
 var _jquery = require("jquery");
@@ -9961,7 +17791,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
   };
 })(_jquery2.default, undefined, 0); /*! http://responsiveslides.com v1.54 by @viljamis */
 
-},{"jquery":1}],4:[function(require,module,exports){
+},{"jquery":44}],96:[function(require,module,exports){
 'use strict';
 
 var _jquery = require('jquery');
@@ -9983,15 +17813,20 @@ function changeState(event) {
   $mainMenuContainer.toggleClass('is-active');
 }
 
-},{"jquery":1}],5:[function(require,module,exports){
+},{"jquery":44}],97:[function(require,module,exports){
 'use strict';
 
 var _jquery = require('jquery');
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
+var _wpcom = require('wpcom');
+
+var _wpcom2 = _interopRequireDefault(_wpcom);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var wpcom = (0, _wpcom2.default)();
 var $noticesContainer = (0, _jquery2.default)('.Notices-container');
 var url = './data.json';
 var html = '';
@@ -10000,6 +17835,21 @@ var template = '<li class="Notices-item">\n  <div class="Notices-imageContainer"
 function renderNotice(url) {
   return Promise.resolve(_jquery2.default.getJSON(url));
 }
+
+function getPosts(url, callback) {
+  var blog = wpcom.site(url);
+  blog.postsList().then(function (posts) {
+    return callback(null, posts);
+  }).catch(function (err) {
+    return callback(err);
+  });
+}
+
+getPosts('papelnoticia.com', function (err, posts) {
+  if (err) console.log(err);else {
+    console.log(posts);
+  }
+});
 
 renderNotice(url).then(function (notices) {
   notices.forEach(function (notice) {
@@ -10012,7 +17862,7 @@ renderNotice(url).then(function (notices) {
   console.log(err);
 });
 
-},{"jquery":1}],6:[function(require,module,exports){
+},{"jquery":44,"wpcom":55}],98:[function(require,module,exports){
 'use strict';
 
 var _jquery = require('jquery');
@@ -10029,4 +17879,4 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
     (0, _jquery2.default)(".rslides").responsiveSlides();
 });
 
-},{"../lib/responsiveslides.js":3,"jquery":1}]},{},[2]);
+},{"../lib/responsiveslides.js":95,"jquery":44}]},{},[94]);

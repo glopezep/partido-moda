@@ -1,8 +1,10 @@
 import $ from 'jquery'
+import WPCOM from 'wpcom'
 
+var wpcom = WPCOM()
 var $noticesContainer = $('.Notices-container')
 var url = './data.json'
-var html=''
+var html = ''
 var template =
 `<li class="Notices-item">
   <div class="Notices-imageContainer">
@@ -19,6 +21,18 @@ function renderNotice (url) {
   return Promise.resolve($.getJSON(url))
 }
 
+function getPosts (url, callback) {
+  var blog = wpcom.site(url)
+  blog.postsList()
+    .then(posts => callback(null, posts))
+    .catch(err => callback(err))
+}
+
+getPosts('papelnoticia.com', (err, posts) => {
+  if (err) console.log(err)
+  else { console.log(posts) }
+})
+
 renderNotice(url).then(notices => {
   notices.forEach(notice => {
     var noticeTemplate = template
@@ -29,7 +43,7 @@ renderNotice(url).then(notices => {
     html = html + noticeTemplate
   })
 })
-.then(() =>{
+.then(() => {
   $noticesContainer.html(html)
 })
 .catch(err => {
