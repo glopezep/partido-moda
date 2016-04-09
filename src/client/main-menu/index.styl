@@ -2,7 +2,25 @@
   text-align right
   padding 0 1em
 
+  &-button
+    display none
+    font-family icons
+    text-decoration none
+    font-size 28px
+    color gray
+  &-buttonCloset
+    position absolute
+    top -1px
+    right 155px
+    display none
+    padding .2em .5em
+    font-size 30px
+    text-decoration none
+    color white
+    background #AA4500
+
   &-container
+    transition all .1s ease-out
     padding 0
     margin 0
 
@@ -23,3 +41,43 @@
 
     &:hover
       border-top 7px solid orange
+
+@media only screen and (max-width: 700px)
+  .MainMenu
+    &-container
+      width 200px
+      position absolute
+      display inline-block
+      top 0
+      right 0
+      z-index 100
+      background orange
+      transform translateX(200px)
+      &.is-active
+        transform translateX(0)
+    &-option
+      display block
+
+@media only screen and (max-width: 1000px)
+  .MainMenu
+    &-container
+      width 200px
+      position absolute
+      display inline-block
+      top 0
+      right 0
+      z-index 100
+      background orange
+      transform translateX(200px)
+      &.is-active
+        transform translateX(0)
+    &-option
+      display block
+      padding-right 1em
+
+    &-link
+      color white
+    &-buttonCloset
+      display inline-block
+    &-button
+      display initial

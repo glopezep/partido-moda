@@ -9853,9 +9853,13 @@ var _index3 = require('./notices/index.js');
 
 var _index4 = _interopRequireDefault(_index3);
 
+var _index5 = require('./main-menu/index.js');
+
+var _index6 = _interopRequireDefault(_index5);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-},{"./notices/index.js":4,"./slide/index.js":5}],3:[function(require,module,exports){
+},{"./main-menu/index.js":4,"./notices/index.js":5,"./slide/index.js":6}],3:[function(require,module,exports){
 "use strict";
 
 var _jquery = require("jquery");
@@ -9966,6 +9970,28 @@ var _jquery2 = _interopRequireDefault(_jquery);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var $mainMenu = (0, _jquery2.default)('.MainMenu');
+var $mainMenuButton = $mainMenu.find('.MainMenu-button');
+var $mainMenuButtonCloset = $mainMenu.find('.MainMenu-buttonCloset');
+var $mainMenuContainer = $mainMenu.find('.MainMenu-container');
+
+$mainMenuButton.on('click', changeState);
+$mainMenuButtonCloset.on('click', changeState);
+
+function changeState(event) {
+  event.preventDefault();
+  $mainMenuContainer.toggleClass('is-active');
+}
+
+},{"jquery":1}],5:[function(require,module,exports){
+'use strict';
+
+var _jquery = require('jquery');
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var $noticesContainer = (0, _jquery2.default)('.Notices-container');
 var url = './data.json';
 var html = '';
@@ -9986,7 +10012,7 @@ renderNotice(url).then(function (notices) {
   console.log(err);
 });
 
-},{"jquery":1}],5:[function(require,module,exports){
+},{"jquery":1}],6:[function(require,module,exports){
 'use strict';
 
 var _jquery = require('jquery');
