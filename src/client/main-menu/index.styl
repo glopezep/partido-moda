@@ -52,9 +52,6 @@
       right 0
       z-index 100
       background orange
-      transform translateX(200px)
-      &.is-active
-        transform translateX(0)
     &-option
       display block
 
@@ -66,11 +63,15 @@
       display inline-block
       top 0
       right 0
-      z-index 100
+      z-index 1000
       background orange
-      transform translateX(200px)
+      display block
+      transform translateY(50px)
+      height 0
+      overflow hidden
       &.is-active
-        transform translateX(0)
+        transform translateY(30px)
+        height initial
     &-option
       display block
       padding-right 1em

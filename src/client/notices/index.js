@@ -3,7 +3,6 @@ import WPCOM from 'wpcom'
 
 var wpcom = WPCOM()
 var $noticesContainer = $('.Notices-container')
-var url = './data.json'
 var html = ''
 var template =
 `<li class="Notices-item">
@@ -11,41 +10,27 @@ var template =
     <img class="Notices-image" src=":noticeImage:">
   </div>
   <div class="Notices-description">
-    <span class="Notices-type">:noticeType:</span>
+    <span class="Notices-type">Leer mas</span>
     <h3 class="Notices-subTitle">:noticeTitle:</h3>
-    <p class="Notices-text">:noticeText:</p>
   </div>
+  <a class="Notices-moreInfo" href=":noticeLink:"></a>
 </li>`
 
-function renderNotice (url) {
-  return Promise.resolve($.getJSON(url))
+var blog = wpcom.site('partidomoda.org.do')
+
+function getPost () {
+  return Promise.resolve(blog.postsList())
 }
 
-function getPosts (url, callback) {
-  var blog = wpcom.site(url)
-  blog.postsList()
-    .then(posts => callback(null, posts))
-    .catch(err => callback(err))
-}
-
-getPosts('papelnoticia.com', (err, posts) => {
-  if (err) console.log(err)
-  else { console.log(posts) }
-})
-
-renderNotice(url).then(notices => {
-  notices.forEach(notice => {
+getPost().then(posts => {
+  for (var i = 0; i <= 8; i++) {
     var noticeTemplate = template
-      .replace(':noticeImage:', notice.image)
-      .replace(':noticeType:', notice.type)
-      .replace(':noticeTitle:', notice.title)
-      .replace(':noticeText:', notice.text)
+      .replace(':noticeImage:', posts.posts[i].featured_image)
+      //.replace(':noticeType:', post.categories[0].name)
+      .replace(':noticeTitle:', posts.posts[i].title)
+      .replace(':noticeLink:', posts.posts[i].URL)
     html = html + noticeTemplate
-  })
+  }
 })
-.then(() => {
-  $noticesContainer.html(html)
-})
-.catch(err => {
-  console.log(err)
-})
+.then(() => { $noticesContainer.html(html) })
+.catch(err => { return err })
