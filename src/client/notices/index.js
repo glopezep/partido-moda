@@ -19,18 +19,17 @@ var template =
 var blog = wpcom.site('partidomoda.org.do')
 
 function getPost () {
-  return Promise.resolve(blog.postsList())
+  return Promise.resolve(blog.postsList({ number: 9 }))
 }
 
 getPost().then(posts => {
-  for (var i = 0; i <= 8; i++) {
+  posts.posts.forEach(post => {
     var noticeTemplate = template
-      .replace(':noticeImage:', posts.posts[i].featured_image)
-      //.replace(':noticeType:', post.categories[0].name)
-      .replace(':noticeTitle:', posts.posts[i].title)
-      .replace(':noticeLink:', posts.posts[i].URL)
+      .replace(':noticeImage:', post.featured_image)
+      .replace(':noticeTitle:', post.title)
+      .replace(':noticeLink:', post.URL)
     html = html + noticeTemplate
-  }
+  })
 })
 .then(() => { $noticesContainer.html(html) })
 .catch(err => { return err })
