@@ -8,7 +8,9 @@
     display flex
     flex-flow row wrap
     justify-content space-around
-
+    transition transform .3s ease
+    &.is-active
+      transform translateY(70px)
   &-item
     display inline-block
     max-width 300px
@@ -16,6 +18,11 @@
     box-shadow 0 4px 4px rgba(black, .5)
     margin-bottom 1em
     position relative
+    transition box-shadow .3s ease
+
+    &:hover
+      box-shadow 0 4px 12px rgba(black, .5)
+
 
   &-moreInfo
     position absolute

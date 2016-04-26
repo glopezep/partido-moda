@@ -31,5 +31,8 @@ getPost().then(posts => {
     html = html + noticeTemplate
   })
 })
-.then(() => { $noticesContainer.html(html) })
+.then(() => {
+  $noticesContainer.siblings('.loader').remove()
+  $noticesContainer.html(html).removeClass('is-active')
+})
 .catch(err => { return err })

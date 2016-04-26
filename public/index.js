@@ -18361,11 +18361,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var $mainMenu = (0, _jquery2.default)('.MainMenu');
 var $mainMenuButton = $mainMenu.find('.MainMenu-button');
-var $mainMenuButtonCloset = $mainMenu.find('.MainMenu-buttonCloset');
 var $mainMenuContainer = $mainMenu.find('.MainMenu-container');
 
 $mainMenuButton.on('click', changeState);
-$mainMenuButtonCloset.on('click', changeState);
 
 function changeState(event) {
   event.preventDefault();
@@ -18393,18 +18391,17 @@ var template = '<li class="Notices-item">\n  <div class="Notices-imageContainer"
 var blog = wpcom.site('partidomoda.org.do');
 
 function getPost() {
-  return Promise.resolve(blog.postsList());
+  return Promise.resolve(blog.postsList({ number: 9 }));
 }
 
 getPost().then(function (posts) {
-  for (var i = 0; i <= 8; i++) {
-    var noticeTemplate = template.replace(':noticeImage:', posts.posts[i].featured_image)
-    //.replace(':noticeType:', post.categories[0].name)
-    .replace(':noticeTitle:', posts.posts[i].title).replace(':noticeLink:', posts.posts[i].URL);
+  posts.posts.forEach(function (post) {
+    var noticeTemplate = template.replace(':noticeImage:', post.featured_image).replace(':noticeTitle:', post.title).replace(':noticeLink:', post.URL);
     html = html + noticeTemplate;
-  }
+  });
 }).then(function () {
-  $noticesContainer.html(html);
+  $noticesContainer.siblings('.loader').remove();
+  $noticesContainer.html(html).removeClass('is-active');
 }).catch(function (err) {
   return err;
 });
