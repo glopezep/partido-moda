@@ -18413,14 +18413,30 @@ var _jquery = require('jquery');
 
 var _jquery2 = _interopRequireDefault(_jquery);
 
-var _responsiveslides = require('../lib/responsiveslides.js');
-
-var _responsiveslides2 = _interopRequireDefault(_responsiveslides);
+require('../lib/responsiveslides.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-(0, _jquery2.default)(function () {
-    (0, _jquery2.default)(".rslides").responsiveSlides();
+var $rSlides = (0, _jquery2.default)('.rslides');
+var imagesHtml = '';
+var images = ['img/partido-moda2.png', 'img/partido-moda2.png', 'img/partido-moda2.png'];
+var imageTemplate = '<img src=":src:">';
+function renderImages(arrayImages, callback) {
+  return Promise.resolve(images);
+}
+
+renderImages().then(function (images) {
+  images.forEach(function (image) {
+    var template = imageTemplate.replace(':src:', image);
+    var slide = '<li>' + template + '</li>';
+    imagesHtml = imagesHtml + slide;
+  });
+}).then(function () {
+  $rSlides.html(imagesHtml);
+}).then(function () {
+  (0, _jquery2.default)(function () {
+    $rSlides.responsiveSlides();
+  });
 });
 
 },{"../lib/responsiveslides.js":99,"jquery":2}]},{},[98]);
