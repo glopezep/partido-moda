@@ -18246,9 +18246,13 @@ var _index5 = require('./main-menu/index.js');
 
 var _index6 = _interopRequireDefault(_index5);
 
+var _index7 = require('./social/index.js');
+
+var _index8 = _interopRequireDefault(_index7);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-},{"./main-menu/index.js":100,"./notices/index.js":101,"./slide/index.js":102}],99:[function(require,module,exports){
+},{"./main-menu/index.js":100,"./notices/index.js":101,"./slide/index.js":102,"./social/index.js":103}],99:[function(require,module,exports){
 "use strict";
 
 var _jquery = require("jquery");
@@ -18419,8 +18423,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var $rSlides = (0, _jquery2.default)('.rslides');
 var imagesHtml = '';
-var images = ['img/partido-moda2.png', 'img/partido-moda2.png', 'img/partido-moda2.png'];
 var imageTemplate = '<img src=":src:">';
+var images = ['img/partido-moda2.png', 'img/partido-moda2.png', 'img/partido-moda2.png'];
+
 function renderImages(arrayImages, callback) {
   return Promise.resolve(images);
 }
@@ -18439,4 +18444,17 @@ renderImages().then(function (images) {
   });
 });
 
-},{"../lib/responsiveslides.js":99,"jquery":2}]},{},[98]);
+},{"../lib/responsiveslides.js":99,"jquery":2}],103:[function(require,module,exports){
+'use strict';
+
+var _jquery = require('jquery');
+
+var _jquery2 = _interopRequireDefault(_jquery);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+(0, _jquery2.default)(document).on('scroll', function (ev) {
+  if (window.scrollY >= 620) (0, _jquery2.default)('.Socials').addClass('is-fixed');else (0, _jquery2.default)('.Socials').removeClass('is-fixed');
+});
+
+},{"jquery":2}]},{},[98]);
