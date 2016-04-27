@@ -6,9 +6,7 @@ var $noticesContainer = $('.Notices-container')
 var html = ''
 var template =
 `<li class="Notices-item">
-  <div class="Notices-imageContainer">
-    <img class="Notices-image" src=":noticeImage:">
-  </div>
+  <div class="Notices-imageContainer" style="background: url(':noticeImage:') no-repeat center center; background-size: cover"></div>
   <div class="Notices-description">
     <span class="Notices-type">Leer mas</span>
     <h3 class="Notices-subTitle">:noticeTitle:</h3>

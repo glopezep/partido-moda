@@ -18395,7 +18395,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var wpcom = (0, _wpcom2.default)();
 var $noticesContainer = (0, _jquery2.default)('.Notices-container');
 var html = '';
-var template = '<li class="Notices-item">\n  <div class="Notices-imageContainer">\n    <img class="Notices-image" src=":noticeImage:">\n  </div>\n  <div class="Notices-description">\n    <span class="Notices-type">Leer mas</span>\n    <h3 class="Notices-subTitle">:noticeTitle:</h3>\n  </div>\n  <a class="Notices-moreInfo" href=":noticeLink:"></a>\n</li>';
+var template = '<li class="Notices-item">\n  <div class="Notices-imageContainer" style="background: url(\':noticeImage:\') no-repeat center center; background-size: cover"></div>\n  <div class="Notices-description">\n    <span class="Notices-type">Leer mas</span>\n    <h3 class="Notices-subTitle">:noticeTitle:</h3>\n  </div>\n  <a class="Notices-moreInfo" href=":noticeLink:"></a>\n</li>';
 
 function getPost(site, numberOfPosts) {
   var blog = wpcom.site(site);
@@ -18429,12 +18429,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var $rSlides = (0, _jquery2.default)('.rslides');
 var imagesHtml = '';
-var imageContainerTemplate = '<div style="background: url(\':src:\') no-repeat center center; background-size: cover; height: 350px; position: relative;"><p style="position: absolute; bottom: 0; left: 0; right: 0; color: white; text-align: center; background: rgba(0,0,0,.7); font-size: 1.2em; margin: 0; padding: .5em;">:text:</p></div>';
+var imageContainerTemplate = '<div style="background: url(\':src:\') no-repeat center center; background-size: cover; height: 400px; position: relative;">\n  <p style="position: absolute; bottom: 0; left: 0; right: 0; color: white; text-align: center; background: rgba(0,0,0,.7); font-size: 1.2em; margin: 0; padding: .5em;">:text:</p>\n  <a href=":link:" style="position: absolute; top: 0; bottom: 0; right: 0; left: 0;"></a>\n</div>';
 
 (0, _index.getPost)('partidomoda.org.do', 3).then(function (posts) {
   var images = posts.posts;
   images.forEach(function (image) {
-    var template = imageContainerTemplate.replace(':src:', image.featured_image).replace(':text:', image.title);
+    var template = imageContainerTemplate.replace(':src:', image.featured_image).replace(':text:', image.title).replace(':link:', image.URL);
     var slide = '<li>' + template + '</li>';
     imagesHtml = imagesHtml + slide;
   });
