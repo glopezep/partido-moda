@@ -18377,6 +18377,11 @@ function changeState(event) {
 },{"jquery":2}],101:[function(require,module,exports){
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getPost = getPost;
+
 var _jquery = require('jquery');
 
 var _jquery2 = _interopRequireDefault(_jquery);
@@ -18392,13 +18397,12 @@ var $noticesContainer = (0, _jquery2.default)('.Notices-container');
 var html = '';
 var template = '<li class="Notices-item">\n  <div class="Notices-imageContainer">\n    <img class="Notices-image" src=":noticeImage:">\n  </div>\n  <div class="Notices-description">\n    <span class="Notices-type">Leer mas</span>\n    <h3 class="Notices-subTitle">:noticeTitle:</h3>\n  </div>\n  <a class="Notices-moreInfo" href=":noticeLink:"></a>\n</li>';
 
-var blog = wpcom.site('partidomoda.org.do');
-
-function getPost() {
-  return Promise.resolve(blog.postsList({ number: 9 }));
+function getPost(site, numberOfPosts) {
+  var blog = wpcom.site(site);
+  return Promise.resolve(blog.postsList({ number: numberOfPosts }));
 }
 
-getPost().then(function (posts) {
+getPost('partidomoda.org.do', 9).then(function (posts) {
   posts.posts.forEach(function (post) {
     var noticeTemplate = template.replace(':noticeImage:', post.featured_image).replace(':noticeTitle:', post.title).replace(':noticeLink:', post.URL);
     html = html + noticeTemplate;
@@ -18419,20 +18423,18 @@ var _jquery2 = _interopRequireDefault(_jquery);
 
 require('../lib/responsiveslides.js');
 
+var _index = require('../notices/index.js');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var $rSlides = (0, _jquery2.default)('.rslides');
 var imagesHtml = '';
-var imageTemplate = '<img src=":src:">';
-var images = ['img/partido-moda2.png', 'img/partido-moda2.png', 'img/partido-moda2.png'];
+var imageContainerTemplate = '<div style="background: url(\':src:\') no-repeat center center; background-size: cover; height: 350px; position: relative;"><p style="position: absolute; bottom: 0; left: 0; right: 0; color: white; text-align: center; background: rgba(0,0,0,.7); font-size: 1.2em; margin: 0; padding: .5em;">:text:</p></div>';
 
-function renderImages(arrayImages, callback) {
-  return Promise.resolve(images);
-}
-
-renderImages().then(function (images) {
+(0, _index.getPost)('partidomoda.org.do', 3).then(function (posts) {
+  var images = posts.posts;
   images.forEach(function (image) {
-    var template = imageTemplate.replace(':src:', image);
+    var template = imageContainerTemplate.replace(':src:', image.featured_image).replace(':text:', image.title);
     var slide = '<li>' + template + '</li>';
     imagesHtml = imagesHtml + slide;
   });
@@ -18444,7 +18446,25 @@ renderImages().then(function (images) {
   });
 });
 
-},{"../lib/responsiveslides.js":99,"jquery":2}],103:[function(require,module,exports){
+/*
+renderImages().then(images => {
+  images.forEach(image => {
+    var template = imageContainerTemplate.replace(':src:', image)
+    var slide = `<li>${template}</li>`
+    imagesHtml = imagesHtml + slide
+  })
+})
+.then(() => {
+  $rSlides.html(imagesHtml)
+})
+.then(() => {
+  $(function () {
+    $rSlides.responsiveSlides()
+  })
+})
+*/
+
+},{"../lib/responsiveslides.js":99,"../notices/index.js":101,"jquery":2}],103:[function(require,module,exports){
 'use strict';
 
 var _jquery = require('jquery');

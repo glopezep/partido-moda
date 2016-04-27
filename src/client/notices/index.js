@@ -16,13 +16,12 @@ var template =
   <a class="Notices-moreInfo" href=":noticeLink:"></a>
 </li>`
 
-var blog = wpcom.site('partidomoda.org.do')
-
-function getPost () {
-  return Promise.resolve(blog.postsList({ number: 9 }))
+export function getPost (site, numberOfPosts) {
+  var blog = wpcom.site(site)
+  return Promise.resolve(blog.postsList({ number: numberOfPosts }))
 }
 
-getPost().then(posts => {
+getPost('partidomoda.org.do', 9).then(posts => {
   posts.posts.forEach(post => {
     var noticeTemplate = template
       .replace(':noticeImage:', post.featured_image)
